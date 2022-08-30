@@ -1,0 +1,24 @@
+server:
+  enabled: true
+  grpc_addr: 127.0.0.1:8881
+  http_addr: 127.0.0.1:8882
+  http_did_addr: 127.0.0.1:8893
+sql:
+  connection_string: file:.imp/imp.db?_auth&_auth_user=admin&_auth_pass=supersecretpassword&_auth_crypt=sha256
+  type: sqlite
+did:
+  universal_resolver_urls:
+  - https://resolver.impervious.live/1.0/identifiers/
+service_list:
+- service_type: relay-registration
+  active: true
+  custom_message_type: https://impervious.ai/didcomm/relay-registration/1.0
+  additional_service_data: null
+ipfs:
+  directory: .imp/
+ion:
+  url: ""
+  active: false
+key:
+  passphrase: ""
+
