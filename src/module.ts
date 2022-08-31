@@ -24,7 +24,10 @@ import { pids } from "./main"; // an array of pids that we want to kill when bro
 //const homePath = `/Users/${process.env.USER}/Impervious/`;
 const user = os.userInfo().username;
 //const homePath = "/Users/" + process.env.USER + "/Impervious/"; works 100%
-const homePath = `/Users/${user}/Impervious/`;
+const homePath =
+  os.platform() === "darwin"
+    ? `/Users/${user}/Impervious/`
+    : `/home/${user}/Impervious/`;
 console.log(homePath);
 fs.mkdirSync(homePath, { recursive: true });
 
