@@ -26,13 +26,15 @@ const user = os.userInfo().username;
 //const homePath = "/Users/" + process.env.USER + "/Impervious/"; works 100%
 const homePath =
   os.platform() === "darwin"
-    ? `/Users/${user}/Impervious/`
-    : `/home/${user}/Impervious/`;
+    ? `/Users/${user}`
+    : `/home/${user}`;
 console.log(homePath);
-fs.mkdirSync(homePath, { recursive: true });
+const impDir = homePath + "/Impervious/"
+fs.mkdirSync(impDir, { recursive: true });
+fs.mkdirSync(homePath + "/.imp/", { recursive: true });
 
-const newBrowserPath = homePath + "browser/";
-const newDaemonPath = homePath + "daemon/";
+const newBrowserPath = impDir + "browser/";
+const newDaemonPath = impDir + "daemon/";
 
 fs.mkdirSync(newBrowserPath, { recursive: true });
 fs.mkdirSync(newDaemonPath, { recursive: true });
@@ -114,7 +116,10 @@ export const spawnImpervious = () => {
 };
 
 export const spawnBrowser = () => {
-  const filepath = newBrowserPath + "Impervious.app";
+  const filepath = 
+  os.platform() === "darwin"
+  ? newBrowserPath + "Impervious.app"
+  : newBrowserPath + "Impervious";
   access(filepath, constants.F_OK, (err) => {
     if (err) {
       log.info(`STDERR: ${err.code as string}, REASON: ${err.message}`);
@@ -124,10 +129,12 @@ export const spawnBrowser = () => {
       if (BrowserWindow.getAllWindows().length === 0) createWindow();
       return;
     }
-    const browserExecutable = `${filepath}/Contents/MacOS/Impervious`;
+    const browserExecutable = 
+    os.platform() === "darwin"
+    ? `${filepath}/Contents/MacOS/Impervious`
+    : `${filepath}/Impervious`;
     const browser = spawn(browserExecutable, {
       cwd: filepath,
-      shell: true,
       detached: true,
     });
 
