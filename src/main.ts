@@ -87,7 +87,7 @@ app.on("ready", () => {
 // for applications and their menu bar to stay active until the user quits
 // explicitly with Cmd + Q.
 app.on("window-all-closed", () => {
-  if (process.platform !== "darwin") {
+  if (process.platform !== "darwin" && process.platform !== "linux") { // also, we dont want electron to die on linux either as it triggers 'before-quit' section below where all pids are killed. May not want this for windows in the future either..
     app.quit();
   }
 });
@@ -97,12 +97,12 @@ export const pids: Array<number> = []; // holds pids of daemon and browser windo
 app.on("before-quit", () => {
   // when browser closes, it will fire close(). this will kill daemon and ensure daemon always dies when electron or firefox goes away
   try {
-    console.info(pids);
+    console.info("Pids in list: ", pids);
     pids.forEach((pid) => {
       process.kill(pid);
     });
   } catch (error) {
-    console.error(error);
+    console.error("Error in PID deletion: ", error.message);
   }
 });
 

@@ -21,7 +21,6 @@ const homePath =
   os.platform() === "darwin"
     ? `/Users/${user}`
     : `/home/${user}`;
-console.log(homePath);
 const impDir = homePath + "/Impervious/"
 fs.mkdirSync(impDir, { recursive: true });
 fs.mkdirSync(homePath + "/.imp/", { recursive: true });
@@ -32,16 +31,10 @@ const newDaemonPath = impDir + "daemon/";
 fs.mkdirSync(newBrowserPath, { recursive: true });
 fs.mkdirSync(newDaemonPath, { recursive: true });
 
-fs.mkdirSync(`${newDaemonPath}/config/`, { recursive: true });
-
-const newDaemonConfigPath = newDaemonPath + "config/config.yml";
-
 
 const baseURL = "https://artifacts.imp-api.net";
 let daemonDownloadURL = `${baseURL}/impervious-daemon/Impervious`;
 let browserDownloadURL = `${baseURL}/impervious-browser/Impervious`;
-const daemonConfigDownloadURL =
-  "https://raw.githubusercontent.com/imperviousai/imp-launcher/enable-linux-build/config.yml";
 
 if (os.platform() === "darwin") {
   if (os.arch() === "arm64") {
@@ -51,35 +44,34 @@ if (os.platform() === "darwin") {
     daemonDownloadURL = `${daemonDownloadURL}-macosx_amd64.zip`;
     browserDownloadURL = `${browserDownloadURL}-macosx_amd64.zip`;
   }
-} else {
-  // default to linux for now
-  daemonDownloadURL = `${daemonDownloadURL}-linux_amd64.zip`;
-  browserDownloadURL = `${browserDownloadURL}-linux_amd64.zip`;
 }
+else if (os.platform() === "linux") {
+  if (os.arch() === "x64") {
+    daemonDownloadURL = `${daemonDownloadURL}-linux_amd64.zip`;
+    browserDownloadURL = `${browserDownloadURL}-linux_amd64.zip`;
+  }
+}
+else {
+  console.error("Unsupported OS or arch. Exiting");
+  process.exit();
+}
+
 
 export const spawnImpervious = () => {
   console.log("Checking for daemon config file");
-  access(newDaemonConfigPath, constants.F_OK, (err) => {
-    if (err) {
-      log.info(`STDERR: ${err.code as string}, REASON: ${err.message}`);
-      log.info(
-        "[STDERR] The Daemon config file doesn't exists. Fetching it now ..."
-      );
-      downloadDaemonConfig();
-    }
-  });
   const filepath = newDaemonPath + "impervious";
   access(filepath, constants.F_OK, (err) => {
     if (err) {
+      console.error("SpawnImpervious error: ", err.message);
       log.info(`STDERR: ${err.code as string}, REASON: ${err.message}`);
       log.info("[STDERR] The Daemon doesn't exists. Fetching it now ...");
       if (BrowserWindow.getAllWindows().length === 0) createWindow();
       return;
     }
 
-    const imp = spawn(filepath, ["--config", newDaemonConfigPath], {
+    const imp = spawn(filepath, {
       cwd: newDaemonPath,
-      shell: true,
+      shell: false,
     });
 
     try {
@@ -150,19 +142,6 @@ const getS3URL = async (url: string) => {
   });
 };
 
-
-const downloadDaemonConfig = async () => {
-  try {
-    const file = fs.createWriteStream(newDaemonConfigPath);
-    const response = await axios.get(daemonConfigDownloadURL, { responseType: "stream"} );
-    console.log(response);
-    await response.data.pipe(file);
-    console.log("Downloaded config file...");
-  } catch (err) {
-    console.error("Failed to download config file...", err.message);
-  }
-}
-
 const download = async (downloadURL: string, outputPath: string) => {
   const s3URL = await getS3URL(downloadURL);
 
@@ -196,13 +175,13 @@ export const downloadDaemon = async (version: string) => {
     await download(daemonDownloadURL, newDaemonPath + "impervious.zip");
     console.log("Daemon download completed...");
   } catch (err) {
-    console.error("Daemon download failure...");
+    console.error("Daemon download failure... ", err.message);
   }
   try {
     await extract(newDaemonPath + "impervious.zip", { dir: newDaemonPath });
     console.log("Daemon extract completed...");
   } catch (err) {
-    console.error("Daemon extraction failure...");
+    console.error("Daemon extraction failure... ", err.message);
   }
 }
 
@@ -211,12 +190,12 @@ export const downloadBrowser = async (version: string) => {
     await download(browserDownloadURL, newBrowserPath + "impervious-browser.zip")
     console.log("Browser download completed...");
   } catch (err) {
-    console.error("Browser download failure...");
+    console.error("Browser download failure... ", err.message);
   }
   try {
     await extract(newBrowserPath + "impervious-browser.zip", { dir: newBrowserPath });
     console.log("Browser extract completed...");
   } catch (err) {
-    console.error("Browser extraction failure...");
+    console.error("Browser extraction failure... ", err.message);
   }
 }
