@@ -116,10 +116,10 @@ export const spawnImpervious = () => {
 };
 
 export const spawnBrowser = () => {
-  const filepath = 
-  os.platform() === "darwin"
-  ? newBrowserPath + "Impervious.app"
-  : newBrowserPath + "Impervious";
+  const filepath =
+    os.platform() === "darwin"
+      ? newBrowserPath + "Impervious.app"
+      : newBrowserPath + "Impervious";
   access(filepath, constants.F_OK, (err) => {
     if (err) {
       log.info(`STDERR: ${err.code as string}, REASON: ${err.message}`);
@@ -129,10 +129,10 @@ export const spawnBrowser = () => {
       if (BrowserWindow.getAllWindows().length === 0) createWindow();
       return;
     }
-    const browserExecutable = 
-    os.platform() === "darwin"
-    ? `${filepath}/Contents/MacOS/Impervious`
-    : `${filepath}/Impervious`;
+    const browserExecutable =
+      os.platform() === "darwin"
+        ? `${filepath}/Contents/MacOS/Impervious`
+        : `${filepath}/Impervious`;
     const browser = spawn(browserExecutable, {
       cwd: filepath,
       detached: true,
@@ -261,50 +261,80 @@ const download = async (downloadURL: string, outputPath: string) => {
     });
 };
 
-export const downloadDaemon = (version: string) => {
-  return new Promise((resolve, reject) => {
-    download(daemonDownloadURL, newDaemonPath + "impervious.zip")
-      .then(() => {
-        // event messaging here
-        // extract
-        try {
-          extract(newDaemonPath + "impervious.zip", { dir: newDaemonPath });
-        } catch (err) {
-          log.error(err);
-        }
-        // tar
-        //   .x({ file: outputPath, cwd: path.join(__dirname, "../daemon/") })
-        //   .then(() => console.log("File successfully extracted"));
-        resolve("daemon extracted");
-        return;
-      })
-      .catch((err) => {
-        // event message here
-        log.error("Unable to download file: ", err);
-        reject();
-      });
-  });
-};
+// export const downloadDaemon = (version: string) => {
+//   return new Promise((resolve, reject) => {
+//     download(daemonDownloadURL, newDaemonPath + "impervious.zip")
+//       .then(() => {
+//         // event messaging here
+//         // extract
+//         try {
+//           extract(newDaemonPath + "impervious.zip", { dir: newDaemonPath });
+//         } catch (err) {
+//           log.error(err);
+//         }
+//         // tar
+//         //   .x({ file: outputPath, cwd: path.join(__dirname, "../daemon/") })
+//         //   .then(() => console.log("File successfully extracted"));
+//         resolve("daemon extracted");
+//         return;
+//       })
+//       .catch((err) => {
+//         // event message here
+//         log.error("Unable to download file: ", err);
+//         reject();
+//       });
+//   });
+// };
 
-export const downloadBrowser = (version: string) => {
-  return new Promise((resolve, reject) => {
-    download(browserDownloadURL, newBrowserPath + "impervious-browser.zip")
-      .then(() => {
-        // event messaging here
-        // extract
-        try {
-          extract(newBrowserPath + "impervious-browser.zip", {
-            dir: newBrowserPath,
-          });
-        } catch (err) {
-          log.info("Unable to extract: ", err);
-        }
-        resolve("browser extracted");
-      })
-      .catch((err) => {
-        // event message here
-        log.info("Unable to download file: ", err);
-        reject();
-      });
-  });
-};
+export const downloadDaemon = async (version: string) => {
+  try {
+    await download(daemonDownloadURL, newDaemonPath + "impervious.zip");
+    console.log("Daemon download completed...");
+  } catch (err) {
+    console.error("Daemon download failure...");
+  }
+  try {
+    await extract(newDaemonPath + "impervious.zip", { dir: newDaemonPath });
+    console.log("Daemon extract completed...");
+  } catch (err) {
+    console.error("Daemon extraction failure...");
+  }
+}
+
+// export const downloadBrowser = (version: string) => {
+//   return new Promise((resolve, reject) => {
+//     download(browserDownloadURL, newBrowserPath + "impervious-browser.zip")
+//       .then(() => {
+//         // event messaging here
+//         // extract
+//         try {
+//           extract(newBrowserPath + "impervious-browser.zip", {
+//             dir: newBrowserPath,
+//           });
+//         } catch (err) {
+//           log.info("Unable to extract: ", err);
+//         }
+//         resolve("browser extracted");
+//       })
+//       .catch((err) => {
+//         // event message here
+//         log.info("Unable to download file: ", err);
+//         reject();
+//       });
+//   });
+// };
+
+export const downloadBrowser = async (version: string) => {
+  try {
+    await download(browserDownloadURL, newBrowserPath + "impervious-browser.zip")
+    console.log("Browser download completed...");
+  } catch (err) {
+    console.error("Browser download failure...");
+  }
+  try {
+    await extract(newBrowserPath + "impervious-browser.zip", { dir: newBrowserPath });
+    console.log("Browser extract completed...");
+  } catch (err) {
+    console.error("Browser extraction failure...");
+  }
+}
