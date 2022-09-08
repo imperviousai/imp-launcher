@@ -77,13 +77,15 @@ ipcMain.on("download-browser-and-daemon", async (event, { payload }) => {
     });
 });
 
-ipcMain.on("close-and-deploy", () => {
+ipcMain.on("close-and-deploy", (event, { payload: platform }) => {
   console.log("Attempting to spawn browser and daemon again.");
   BrowserWindow.getFocusedWindow()?.close();
   // attempt to launch them both again
   spawnImpervious();
   spawnBrowser();
-  app.dock.hide();
+  if (platform === "darwin") {
+    app.dock.hide();
+  }
 });
 
 // In this file you can include the rest of your app's specific main process

@@ -5,6 +5,7 @@ import {
   OpenExternalOptions,
 } from "electron";
 import { createStoreBindings } from "electron-persist-secure/lib/bindings";
+import os from "os";
 
 type EventCallback = () => void;
 type DownloadPayload = {
@@ -47,7 +48,7 @@ export const electronBridge = {
   },
 
   closeAndDeploy: (): void => {
-    ipcRenderer.send("close-and-deploy");
+    ipcRenderer.send("close-and-deploy", os.platform());
   },
 
   on: (eventName: string, callback: EventCallback): void => {

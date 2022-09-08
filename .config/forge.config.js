@@ -65,7 +65,7 @@ module.exports = {
     // Use maker-zip to build for mac, but without customizability
     {
       name: "@electron-forge/maker-zip",
-      platforms: ["darwin"],
+      platforms: ["darwin", "linux"],
       // No config choice
     },
 
