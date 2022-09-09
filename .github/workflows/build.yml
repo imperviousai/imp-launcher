@@ -75,10 +75,10 @@ jobs:
         run: yarn
       - name: Build
         run: yarn make:linux --arch=x64
-      - name: Unzip Impervious-linux-x64-0.2.0.zip
-        run: unzip out/make/zip/linux/x64/Impervious-linux-x64-0.2.0.zip -d out/make/zip/linux/x64/
+      # - name: Unzip Impervious-linux-x64-0.2.0.zip
+      #   run: unzip out/make/zip/linux/x64/Impervious-linux-x64-0.2.0.zip -d out/make/zip/linux/x64/
       - name: "Upload artifacts to Job"
         uses: actions/upload-artifact@v3
         with:
           name: Impervious-linux_amd64
-          path: out/make/zip/linux/x64/Impervious-linux-x64/*
+          path: out/make/zip/linux/x64/Impervious-linux-x64/*.zip
