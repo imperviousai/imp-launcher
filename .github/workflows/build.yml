@@ -2,7 +2,7 @@ name: Build, Sign, Push Artifacts
 on:
   push:
     branches:
-      - main
+      - build-and-sign
 
 jobs:
   macosx_arm64:
@@ -26,8 +26,8 @@ jobs:
         run: yarn make:mac --arch=arm64
         env:
           AC_PASSWORD: ${{ secrets.AC_PASSWORD }}
-      - name: Unzip Impervious-darwin-arm64-2.0.0.zip
-        run: unzip out/make/zip/darwin/arm64/Impervious-darwin-arm64-2.0.0.zip -d out/make/zip/darwin/arm64
+      - name: Unzip Impervious-darwin-arm64-0.2.0.zip
+        run: unzip out/make/zip/darwin/arm64/Impervious-darwin-arm64-0.2.0.zip -d out/make/zip/darwin/arm64
       - name: "Upload artifacts to Job"
         uses: actions/upload-artifact@v3
         with:
@@ -54,8 +54,8 @@ jobs:
         run: yarn make:mac --arch=x64
         env:
           AC_PASSWORD: ${{ secrets.AC_PASSWORD }}
-      - name: Unzip Impervious-darwin-x64-2.0.0.zip
-        run: unzip out/make/zip/darwin/x64/Impervious-darwin-x64-2.0.0.zip -d out/make/zip/darwin/x64/
+      - name: Unzip Impervious-darwin-x64-0.2.0.zip
+        run: unzip out/make/zip/darwin/x64/Impervious-darwin-x64-0.2.0.zip -d out/make/zip/darwin/x64/
       - name: "Upload artifacts to Job"
         uses: actions/upload-artifact@v3
         with:
