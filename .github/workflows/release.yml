@@ -1,8 +1,8 @@
 name: Build, Sign, Release
 on:
   push:
-    tags:
-      - "*"
+    branches:
+      - "master"
 
 jobs:
   macosx:
@@ -30,12 +30,17 @@ jobs:
         run: yarn make:mac 
         env:
           AC_PASSWORD: ${{ secrets.AC_PASSWORD }}
+      - name: Build (linux-x64)
+        run: yarn make:linux --arch=x64
       - name: "Release artifacts"
         uses: "marvinpinto/action-automatic-releases@latest"
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          prerelease: false
+          prerelease: true
+          automatic_release_tag: "0.2.0-alpha"
+          title: "0.2.0 Alpha Release"
           files: |
-            out/make/zip/darwin/arm64/*
-            out/make/zip/darwin/x64/*
+            out/make/zip/darwin/arm64/*.zip
+            out/make/zip/darwin/x64/*.zip
+            out/make/zip/linux/x64/*.zip
             
