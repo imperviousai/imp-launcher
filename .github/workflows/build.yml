@@ -26,13 +26,13 @@ jobs:
         run: yarn make:mac --arch=arm64
         env:
           AC_PASSWORD: ${{ secrets.AC_PASSWORD }}
-      - name: Unzip Impervious-darwin-arm64-0.2.0.zip
-        run: unzip out/make/zip/darwin/arm64/Impervious-darwin-arm64-0.2.0.zip -d out/make/zip/darwin/arm64
+      # - name: Unzip Impervious-darwin-arm64-0.2.0.zip
+      #   run: unzip out/make/zip/darwin/arm64/Impervious-darwin-arm64-0.2.0.zip -d out/make/zip/darwin/arm64
       - name: "Upload artifacts to Job"
         uses: actions/upload-artifact@v3
         with:
           name: Impervious-macosx_arm64
-          path: out/make/zip/darwin/arm64/*.app
+          path: out/make/zip/darwin/arm64/*.zip
   macosx_amd64:
     name: Build, Sign, Push Artifacts (macosx_amd64)
     runs-on: macos-latest
@@ -54,13 +54,13 @@ jobs:
         run: yarn make:mac --arch=x64
         env:
           AC_PASSWORD: ${{ secrets.AC_PASSWORD }}
-      - name: Unzip Impervious-darwin-x64-0.2.0.zip
-        run: unzip out/make/zip/darwin/x64/Impervious-darwin-x64-0.2.0.zip -d out/make/zip/darwin/x64/
+      # - name: Unzip Impervious-darwin-x64-0.2.0.zip
+      #   run: unzip out/make/zip/darwin/x64/Impervious-darwin-x64-0.2.0.zip -d out/make/zip/darwin/x64/
       - name: "Upload artifacts to Job"
         uses: actions/upload-artifact@v3
         with:
           name: Impervious-macosx_amd64
-          path: out/make/zip/darwin/x64/*.app
+          path: out/make/zip/darwin/x64/*.zip
   linux_amd64:
     name: Build, Sign, Push Artifacts (linux_amd64)
     runs-on: ubuntu-latest
