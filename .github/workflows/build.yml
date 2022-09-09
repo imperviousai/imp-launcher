@@ -61,3 +61,31 @@ jobs:
         with:
           name: Impervious-macosx_amd64
           path: out/make/zip/darwin/x64/*.app
+  linux_amd64:
+    name: Build, Sign, Push Artifacts (linux_amd64)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Set Up Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 14
+      - name: Yarn Install
+        run: yarn
+      - name: Import Keychain Certs
+        uses: apple-actions/import-codesign-certs@v1
+        with: 
+          p12-file-base64: ${{ secrets.CERTIFICATES_P12 }}
+          p12-password: ${{ secrets.CERTIFICATES_P12_PASSWORD }}
+      - name: Build and Sign
+        run: yarn make:linux --arch=x64
+        env:
+          AC_PASSWORD: ${{ secrets.AC_PASSWORD }}
+      - name: Unzip Impervious-linux-x64-0.2.0.zip
+        run: unzip out/make/zip/linux/x64/Impervious-linux-x64-0.2.0.zip -d out/make/zip/linux/x64/
+      - name: "Upload artifacts to Job"
+        uses: actions/upload-artifact@v3
+        with:
+          name: Impervious-linux_amd64
+          path: out/make/zip/linux/x64/Impervious*
