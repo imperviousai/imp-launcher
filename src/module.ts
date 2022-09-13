@@ -43,16 +43,16 @@ let browserDownloadURL:string = "";
 
   if (os.platform() === "darwin") {
     if (os.arch() === "arm64") {
-      latestDaemon.data.assets.forEach((asset: any) => {if (asset.browser_download_url.match(/impervious\-.*?-darwin-arm64\.tar\.gz$/g)) daemonDownloadURL = asset.browser_download_url});
+      latestDaemon.data.assets.forEach((asset: any) => {if (asset.browser_download_url.match(/impervious.*?darwin.*?arm64\.zip$/g)) daemonDownloadURL = asset.browser_download_url});
       latestBrowser.data.assets.forEach((asset: any) => {if (asset.browser_download_url.match(/Impervious\-macosx_arm64\.zip$/g)) browserDownloadURL = asset.browser_download_url});
     } else {
-      latestDaemon.data.assets.forEach((asset: any) => {if (asset.browser_download_url.match(/impervious\-.*?-darwin-amd64\.tar\.gz$/g)) daemonDownloadURL = asset.browser_download_url});
+      latestDaemon.data.assets.forEach((asset: any) => {if (asset.browser_download_url.match(/impervious.*?darwin.*?amd64\.zip$/g)) daemonDownloadURL = asset.browser_download_url});
       latestBrowser.data.assets.forEach((asset: any) => {if (asset.browser_download_url.match(/Impervious\-macosx_amd64\.zip$/g)) browserDownloadURL = asset.browser_download_url});
     }
   }
   else if (os.platform() === "linux") {
     if (os.arch() === "x64") {
-      latestDaemon.data.assets.forEach((asset: any) => {if (asset.browser_download_url.match(/impervious\-.*?-linux-amd64\.tar\.gz$/g)) daemonDownloadURL = asset.browser_download_url});
+      latestDaemon.data.assets.forEach((asset: any) => {if (asset.browser_download_url.match(/impervious.*?linux.*?amd64\.zip$/g)) daemonDownloadURL = asset.browser_download_url});
       latestBrowser.data.assets.forEach((asset: any) => {if (asset.browser_download_url.match(/Impervious\-linux_amd64\.zip$/g)) browserDownloadURL = asset.browser_download_url});
     }
   }
@@ -171,17 +171,13 @@ const download = async (downloadURL: string, outputPath: string) => {
 
 export const downloadDaemon = async (version: string) => {
   try {
-    await download(daemonDownloadURL, newDaemonPath + "impervious.tar.gz");
+    await download(daemonDownloadURL, newDaemonPath + "impervious.zip");
     console.log("Daemon download completed...");
   } catch (err) {
     console.error("Daemon download failure... ", err.message);
   }
   try {
-    await tar.x({
-      file : newDaemonPath + "impervious.tar.gz",
-      cwd : newDaemonPath,
-      sync : true,
-    })
+    await extract(newDaemonPath + "impervious.zip", { dir: newDaemonPath });
     console.log("Daemon extract completed...");
   } catch (err) {
     console.error("Daemon extraction failure... ", err.message);
