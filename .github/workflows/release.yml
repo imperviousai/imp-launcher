@@ -1,8 +1,7 @@
-name: Build, Sign, Release
+name: Build-Sign-Release
 on:
-  push:
-    branches:
-      - "master"
+  release:
+    types: [created]
 
 jobs:
   macosx:
@@ -36,9 +35,6 @@ jobs:
         uses: "marvinpinto/action-automatic-releases@latest"
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          prerelease: true
-          automatic_release_tag: "0.2.0-alpha"
-          title: "0.2.0 Alpha Release"
           files: |
             out/make/zip/darwin/arm64/*.zip
             out/make/zip/darwin/x64/*.zip
