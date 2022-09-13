@@ -33,6 +33,47 @@ fs.mkdirSync(newBrowserPath, { recursive: true });
 fs.mkdirSync(newDaemonPath, { recursive: true });
 
 
+const baseURL = "https://artifacts.imp-api.net";
+// let daemonDownloadURL = `${baseURL}/impervious-daemon/Impervious`;
+let browserDownloadURL = `${baseURL}/impervious-browser/Impervious`;
+
+let daemonDownloadURL:string = "";
+
+
+
+
+
+(async () => {
+  const latestInfo = await axios.get('https://api.github.com/repos/imperviousai/imp-daemon/releases/latest');
+
+  if (os.platform() === "darwin") {
+    if (os.arch() === "arm64") {
+      latestInfo.data.assets.forEach((asset: any) => {if (asset.browser_download_url.match(/impervious\-.*?-darwin-arm64\.tar\.gz$/g)) daemonDownloadURL = asset.browser_download_url});
+      browserDownloadURL = `${browserDownloadURL}-macosx_arm64.zip`;
+    } else {
+      latestInfo.data.assets.forEach((asset: any) => {if (asset.browser_download_url.match(/impervious\-.*?-darwin-amd64\.tar\.gz$/g)) daemonDownloadURL = asset.browser_download_url});
+      browserDownloadURL = `${browserDownloadURL}-macosx_amd64.zip`;
+    }
+  }
+  else if (os.platform() === "linux") {
+    if (os.arch() === "x64") {
+      latestInfo.data.assets.forEach((asset: any) => {if (asset.browser_download_url.match(/impervious\-.*?-linux-amd64\.tar\.gz$/g)) daemonDownloadURL = asset.browser_download_url});
+      browserDownloadURL = `${browserDownloadURL}-linux_amd64.zip`;
+
+    }
+  }
+  else {
+    console.error("Unsupported OS or arch. Exiting");
+    process.exit();
+  }
+
+})();
+
+
+
+
+
+
 // if (os.platform() === "darwin") {
 //   if (os.arch() === "arm64") {
 //     daemonDownloadURL = `${daemonDownloadURL}-macosx_arm64.zip`;
@@ -185,25 +226,6 @@ const download = async (downloadURL: string, outputPath: string) => {
 
 export const downloadBrowser = async (version: string) => {
   try {
-    const baseURL = "https://artifacts.imp-api.net";
-    // let daemonDownloadURL = `${baseURL}/impervious-daemon/Impervious`;
-    let browserDownloadURL = `${baseURL}/impervious-browser/Impervious`;
-    if (os.platform() === "darwin") {
-      if (os.arch() === "arm64") {
-        browserDownloadURL = `${browserDownloadURL}-macosx_arm64.zip`;
-      } else {
-        browserDownloadURL = `${browserDownloadURL}-macosx_amd64.zip`;
-      }
-    }
-    else if (os.platform() === "linux") {
-      if (os.arch() === "x64") {
-        browserDownloadURL = `${browserDownloadURL}-linux_amd64.zip`;
-      }
-    }
-    else {
-      console.error("Unsupported OS or arch. Exiting");
-      process.exit();
-    }
     await download(browserDownloadURL, newBrowserPath + "impervious-browser.zip")
     console.log("Browser download completed...");
   } catch (err) {
@@ -219,25 +241,6 @@ export const downloadBrowser = async (version: string) => {
 
 export const downloadDaemon = async (version: string) => {
   try {
-    let daemonDownloadURL:string = "";
-    const latestInfo = await axios.get('https://api.github.com/repos/imperviousai/imp-daemon/releases/latest');
-
-    if (os.platform() === "darwin") {
-      if (os.arch() === "arm64") {
-        latestInfo.data.assets.forEach((asset: any) => {if (asset.browser_download_url.match(/impervious\-.*?-darwin-arm64\.tar\.gz$/g)) daemonDownloadURL = asset.browser_download_url});
-      } else {
-        latestInfo.data.assets.forEach((asset: any) => {if (asset.browser_download_url.match(/impervious\-.*?-darwin-amd64\.tar\.gz$/g)) daemonDownloadURL = asset.browser_download_url});
-      }
-    }
-    else if (os.platform() === "linux") {
-      if (os.arch() === "x64") {
-        latestInfo.data.assets.forEach((asset: any) => {if (asset.browser_download_url.match(/impervious\-.*?-linux-amd64\.tar\.gz$/g)) daemonDownloadURL = asset.browser_download_url});
-      }
-    }
-    else {
-      console.error("Unsupported OS or arch. Exiting");
-      process.exit();
-    }
     //await download(daemonDownloadURL, newDaemonPath + "impervious.zip");
     const file = fs.createWriteStream(newDaemonPath + "impervious.tar.gz");
     return axios({
