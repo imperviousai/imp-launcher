@@ -1,7 +1,7 @@
 {
   "name": "impervious",
   "productName": "Impervious",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "The Impervious Browser",
   "main": ".webpack/main",
   "scripts": {
