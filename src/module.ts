@@ -8,6 +8,7 @@ import stream from "stream";
 import { promisify } from "util";
 import { createWindow } from "./main";
 import os from "os";
+import tar from "tar";
 
 const finished = promisify(stream.finished);
 import log from "electron-log";
@@ -32,29 +33,35 @@ fs.mkdirSync(newBrowserPath, { recursive: true });
 fs.mkdirSync(newDaemonPath, { recursive: true });
 
 
-const baseURL = "https://artifacts.imp-api.net";
-let daemonDownloadURL = `${baseURL}/impervious-daemon/Impervious`;
-let browserDownloadURL = `${baseURL}/impervious-browser/Impervious`;
+let daemonDownloadURL:string = "";
+let browserDownloadURL:string = "";
 
-if (os.platform() === "darwin") {
-  if (os.arch() === "arm64") {
-    daemonDownloadURL = `${daemonDownloadURL}-macosx_arm64.zip`;
-    browserDownloadURL = `${browserDownloadURL}-macosx_arm64.zip`;
-  } else {
-    daemonDownloadURL = `${daemonDownloadURL}-macosx_amd64.zip`;
-    browserDownloadURL = `${browserDownloadURL}-macosx_amd64.zip`;
+
+(async () => {
+  const latestDaemon = await axios.get('https://api.github.com/repos/imperviousai/imp-daemon/releases/latest');
+  const latestBrowser = await axios.get('https://api.github.com/repos/imperviousai/imp-browser/releases/latest');
+
+  if (os.platform() === "darwin") {
+    if (os.arch() === "arm64") {
+      latestDaemon.data.assets.forEach((asset: any) => {if (asset.browser_download_url.match(/impervious.*?darwin.*?arm64\.zip$/g)) daemonDownloadURL = asset.browser_download_url});
+      latestBrowser.data.assets.forEach((asset: any) => {if (asset.browser_download_url.match(/Impervious\-macosx_arm64\.zip$/g)) browserDownloadURL = asset.browser_download_url});
+    } else {
+      latestDaemon.data.assets.forEach((asset: any) => {if (asset.browser_download_url.match(/impervious.*?darwin.*?amd64\.zip$/g)) daemonDownloadURL = asset.browser_download_url});
+      latestBrowser.data.assets.forEach((asset: any) => {if (asset.browser_download_url.match(/Impervious\-macosx_amd64\.zip$/g)) browserDownloadURL = asset.browser_download_url});
+    }
   }
-}
-else if (os.platform() === "linux") {
-  if (os.arch() === "x64") {
-    daemonDownloadURL = `${daemonDownloadURL}-linux_amd64.zip`;
-    browserDownloadURL = `${browserDownloadURL}-linux_amd64.zip`;
+  else if (os.platform() === "linux") {
+    if (os.arch() === "x64") {
+      latestDaemon.data.assets.forEach((asset: any) => {if (asset.browser_download_url.match(/impervious.*?linux.*?amd64\.zip$/g)) daemonDownloadURL = asset.browser_download_url});
+      latestBrowser.data.assets.forEach((asset: any) => {if (asset.browser_download_url.match(/Impervious\-linux_amd64\.zip$/g)) browserDownloadURL = asset.browser_download_url});
+    }
   }
-}
-else {
-  console.error("Unsupported OS or arch. Exiting");
-  process.exit();
-}
+  else {
+    console.error("Unsupported OS or arch. Exiting");
+    process.exit();
+  }
+
+})();
 
 
 export const spawnImpervious = () => {
@@ -135,20 +142,12 @@ export const spawnBrowser = () => {
   });
 };
 
-const getS3URL = async (url: string) => {
-  return axios({
-    method: "get",
-    url,
-  });
-};
 
 const download = async (downloadURL: string, outputPath: string) => {
-  const s3URL = await getS3URL(downloadURL);
-
   const file = fs.createWriteStream(outputPath);
-  return axios({
+  return await axios({
     method: "get",
-    url: s3URL.data,
+    url: downloadURL,
     responseType: "stream",
   })
     .then(async (response) => {
