@@ -75,4 +75,4 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: Impervious-linux_amd64
-          path: out/make/zip/linux/x64/Impervious-linux-x64/*.zip
+          path: out/make/zip/linux/x64/*.zip
