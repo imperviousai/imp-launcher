@@ -90,3 +90,6 @@ out/
 
 # Daemon 
 .imp/
+
+vscode/
+vscode/*

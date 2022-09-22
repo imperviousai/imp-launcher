@@ -1,10 +1,11 @@
 {
   "name": "impervious",
   "productName": "Impervious",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "The Impervious Browser",
   "main": ".webpack/main",
   "scripts": {
+    "debug": "electron-forge start --vscode",
     "start": "electron-forge start",
     "lint": "cross-env NODE_ENV=development eslint",
     "format": "prettier --ignore-path .eslintignore --write",
@@ -115,6 +116,7 @@
     "electron-squirrel-startup": "^1.0.0",
     "electron-unhandled": "^4.0.1",
     "extract-zip": "^2.0.1",
+    "ps-list": "^8.1.0",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "react-router-dom": "^6.2.2",

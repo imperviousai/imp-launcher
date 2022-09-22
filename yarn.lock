@@ -7313,6 +7313,11 @@ proxy-addr@~2.0.7:
     forwarded "0.2.0"
     ipaddr.js "1.9.1"
 
+ps-list@^8.1.0:
+  version "8.1.0"
+  resolved "https://registry.yarnpkg.com/ps-list/-/ps-list-8.1.0.tgz#aded36339500cd929f1425ece9bf58ac6d3a213e"
+  integrity sha512-NoGBqJe7Ou3kfQxEvDzDyKGAyEgwIuD3YrfXinjcCmBRv0hTld0Xb71hrXvtsNPj7HSFATfemvzB8PPJtq6Yag==
+
 psl@^1.1.28:
   version "1.8.0"
   resolved "https://registry.yarnpkg.com/psl/-/psl-1.8.0.tgz#9326f8bcfb013adcc005fdff056acce020e51c24"
