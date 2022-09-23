@@ -105,14 +105,14 @@ if (!gotTheLock) {
  
  app.on("before-quit", () => {
    // when browser closes, it will fire close(). this will kill daemon and ensure daemon always dies when electron or firefox goes away
-   try {
      console.info("Pids in list: ", pids);
      pids.forEach((pid) => {
+      try {
        process.kill(pid);
+      } catch (error) {
+        console.error("Error in PID deletion: ", error.message);
+      }
      });
-   } catch (error) {
-     console.error("Error in PID deletion: ", error.message);
-   }
  });
  
  app.on("activate", () => {

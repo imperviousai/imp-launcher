@@ -1,7 +1,7 @@
 import { app, BrowserWindow } from "electron";
 import fs, { accessSync, existsSync } from "fs";
 import { access, constants } from "node:fs";
-import { spawn } from "child_process";
+import { ChildProcess, spawn } from "child_process";
 import extract from "extract-zip";
 import axios from "axios";
 import stream from "stream";
@@ -151,11 +151,22 @@ const alreadyRunningCheck = async (substring: string) => {
   return counter;
 }
 
-const respawn = (imp, filepath:string) => {
-  imp.stdout.on("data", (data: string) => {
+const respawn = (imp:ChildProcess, filepath:string) => {
+
+  try {
+    if (imp.pid) {
+      pids.push(imp.pid);
+    } else {
+      console.log("Failed to spawn daemon and push pid");
+    }
+  } catch (error) {
+    log.error(error);
+  }
+
+  imp.stdout?.on("data", (data: string) => {
     log.info(`[STDOUT] ${data.toString()}`);
   });
-  imp.stderr.on("data", (data: string) => {
+  imp.stderr?.on("data", (data: string) => {
     log.error(`[STDERR] ${data.toString()}`);
   });
   imp.on("close", () => {
