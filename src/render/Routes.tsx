@@ -6,6 +6,7 @@ import {
 } from "react-router-dom";
 import RouterPaths from "@/render/utils/routes.json";
 import HomePage from "@/render/containers/HomePage";
+import UpdatePage from "@/render/containers/UpdatePage";
 
 const Routes = () => {
   return (
@@ -18,6 +19,7 @@ const Routes = () => {
             element={<Navigate replace to={RouterPaths.HOME} />}
           />
           <Route caseSensitive path={RouterPaths.HOME} element={<HomePage />} />
+          <Route caseSensitive path={"/update"} element={<UpdatePage />} />
         </Switch>
       </Router>
     </>

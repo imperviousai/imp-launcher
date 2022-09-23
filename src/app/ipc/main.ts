@@ -60,16 +60,6 @@ ipcMain.on("download-browser-and-daemon", async (event, { payload }) => {
         window.webContents.send("all-download-successful");
       }
 
-      // BrowserWindow.getFocusedWindow()?.webContents?.send(
-      //       "all-download-successful"
-      //     );
-
-      // BrowserWindow.focus
-      // BrowserWindow.on('focus', () => {
-      //   BrowserWindow.getFocusedWindow()?.webContents?.send(
-      //     "all-download-successful"
-      //   );
-      // })
     })
     .catch((error) => {
       console.log(error);

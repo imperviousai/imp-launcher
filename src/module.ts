@@ -6,7 +6,7 @@ import extract from "extract-zip";
 import axios from "axios";
 import stream from "stream";
 import { promisify } from "util";
-import { createWindow } from "./main";
+import { createWindow, createUpdateWindow } from "./main";
 import os from "os";
 import psList from "ps-list";
 
@@ -108,6 +108,7 @@ export const checkForDaemonUpdates = async () => {
       console.log("Daemon is up to date.");
       return;
     }
+    createUpdateWindow();
     console.log("Remove old daemon zip...")
     fs.unlinkSync(newDaemonPath + "impervious.zip")
 

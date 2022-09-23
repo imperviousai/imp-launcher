@@ -161,6 +161,7 @@ const Section1: FC<Props> = ({ sections, setSections }) => {
   );
 };
 
+
 function HomePage() {
   const [sections, setSections] = useState(0);
 
