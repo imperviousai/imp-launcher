@@ -56,9 +56,9 @@ const versioningFile:string = impDir + "versioning.json";
 
 export const initDownloadInfo = async () => {
   try {
-  const latestDaemon = await axios.get('https://api.github.com/repos/imperviousai/imp-daemon/releases/latest');
-  const latestBrowser = await axios.get('https://api.github.com/repos/imperviousai/imp-browser/releases/latest');
-  const latestLauncher = await axios.get('https://api.github.com/repos/imperviousai/imp-launcher/releases/latest')
+  const latestDaemon = await axios.get('https://releases.impervious.live/imp-daemon');
+  const latestBrowser = await axios.get('https://releases.impervious.live/imp-browser');
+  const latestLauncher = await axios.get('https://releases.impervious.live/imp-launcher')
 
   if (os.platform() === "darwin") {
     if (os.arch() === "arm64") {
