@@ -7,7 +7,7 @@ const packageAssetsPath = path.join(__dirname, "..", "assets", "package");
 module.exports = {
   packagerConfig: {
     asar: false,
-    name: "imp-launcher",
+    name: "Impervious",
     icon: path.join(packageAssetsPath, "icons", "mac", "icon.icns"),
     osxSign: {
       entitlements: "entitlements.plist",

@@ -189,7 +189,7 @@ export const spawnImpervious = async () => {
   } catch (err) {
     console.error("Error in SpawnImpervious accessSync", err.message);
     const counter = await alreadyRunningCheck("imp-launcher");
-    if (counter <= 1 && BrowserWindow.getAllWindows().length === 0){
+    if (BrowserWindow.getAllWindows().length === 0){
       createWindow();
       return;
     }
@@ -245,7 +245,7 @@ export const spawnBrowser = async () => {
   } catch (err) {
     console.error("Error in spawnBrowser", err.message);
     const counter = await alreadyRunningCheck("imp-launcher");
-    if (counter <= 1 && BrowserWindow.getAllWindows().length === 0){
+    if (BrowserWindow.getAllWindows().length === 0){
       createWindow();
       return;
     }
