@@ -39,21 +39,6 @@ let browserDownloadURL:string = "";
 let launcherDownloadURL:string = "";
 const versioningFile:string = impDir + "versioning.json";
 
-
-// const checkForLauncherUpdate = async () => {
-//   let versioningInfo = JSON.parse(fs.readFileSync(versioningFile).toString());
-//   let latestVersion = launcherDownloadURL.match(/\d+\.\d+\.\d+/)?.toString();
-
-//   if (versioningInfo.launcherVersion === latestVersion){
-//     console.log("Launcher is up to date.");
-//     return;
-//   }
-
-//   console.log("Downloading launcher update...");
-//   await downloadLauncher();
-
-// }
-
 export const initDownloadInfo = async () => {
   try {
   const latestDaemon = await axios.get('https://releases.impervious.live/imp-daemon');
@@ -98,7 +83,7 @@ export const checkForDaemonUpdates = async () => {
       browserVersion: "0.0.0",
       launcherVersion: "0.0.0"
     }
-    fs.writeFileSync(versioningFile, JSON.stringify(versioningInfoDefaults));
+    fs.writeFileSync(versioningFile, JSON.stringify(versioningInfoDefaults, null, 2));
   }
   try {
     const versioningInfo = await JSON.parse(fs.readFileSync(versioningFile).toString());
@@ -124,19 +109,38 @@ export const checkForDaemonUpdates = async () => {
 
 
 
-const writeVersionInformation = (daemonDownloadURL: string) => {
-  const daemonVersionNumber = daemonDownloadURL.match(/v\d+\.\d+\.\d+/);
-  // const browserVersionNumber = browserDownloadURL.match(/\d+\.\d+\.\d+/);
-  // const launcherVersionNumber = launcherDownloadURL.match(/\d+\.\d+\.\d+/);
-  
-  const versioningInfo = {
-    daemonVersion: daemonVersionNumber?.toString()
-    // browserVersion: browserVersionNumber?.toString(),
-    // launcherVersion: launcherVersionNumber?.toString()
+const writeVersionInformation = (updatedProgram: string, url: string) => {
+
+  try {
+    accessSync(versioningFile, constants.R_OK)
+  } catch (err) {
+    console.error("No versioning.json found. Writing defaults.");
+    const versioningInfoDefaults = {
+      daemonVersion: "0.0.0",
+      browserVersion: "0.0.0",
+      launcherVersion: "0.0.0"
+    }
+    fs.writeFileSync(versioningFile, JSON.stringify(versioningInfoDefaults, null, 2));
   }
 
-  fs.writeFileSync(versioningFile,
-    JSON.stringify(versioningInfo))
+  try {
+    const versioningInfo = JSON.parse(fs.readFileSync(versioningFile).toString());
+    let newVersionNumber;
+
+    if (updatedProgram === "daemon"){
+      newVersionNumber = url.match(/v\d+\.\d+\.\d+/);
+      versioningInfo.daemonVersion = newVersionNumber?.toString();
+    }
+    if (updatedProgram === "imp-launcher"){
+      newVersionNumber = url.match(/\d+\.\d+\.\d+/);
+      versioningInfo.launcherVersion = newVersionNumber?.toString();
+    }
+
+
+    fs.writeFileSync(versioningFile, JSON.stringify(versioningInfo, null, 2));
+  } catch (err) {
+    console.error("Error reading versioning file in writeVersionInformation");
+  }
 }
 
 const alreadyRunningCheck = async (substring: string) => {
@@ -209,12 +213,10 @@ export const spawnImpervious = async () => {
           console.log("Found running match: ", proc.cmd)
           alreadyRunning = true;
           process.kill(proc.pid); // kill any previous daemons in process list
-          //pids.push(proc.pid);
-          //return;
         }
       }
       // if (os.platform() === "win32"){
-          // currentProc.name (currentProc.cmd doesn work on windows)
+          // currentProc.name (currentProc.cmd doesnt work on windows)
       // }
     }
   } catch (err) {
@@ -225,7 +227,7 @@ export const spawnImpervious = async () => {
     console.log("Daemon already running...");
     //return;
   }
-    
+
 
       respawn(spawn(filepath, {  // this should ensure daemon always runs as long as electron is alive
         cwd: newDaemonPath,
@@ -249,7 +251,6 @@ export const spawnBrowser = async () => {
       createWindow();
       return;
     }
-    // if (BrowserWindow.getAllWindows().length === 0) createWindow();
     return;
   }
     const browserExecutable =
@@ -320,7 +321,7 @@ export const downloadDaemon = async (version: string) => {
   }
   try {
     // save version info after successful dl/extract
-    writeVersionInformation(daemonDownloadURL);
+    writeVersionInformation("daemon", daemonDownloadURL);
   } catch (err) {
     console.error("Daemon version info write failure:", err.message);
   }
@@ -340,18 +341,3 @@ export const downloadBrowser = async (version: string) => {
     console.error("Browser extraction failure... ", err.message);
   }
 }
-
-// const downloadLauncher = async () => {
-//   try {
-//     await download(launcherDownloadURL, newBrowserPath + "impervious-browser.zip")
-//     console.log("Browser download completed...");
-//   } catch (err) {
-//     console.error("Browser download failure... ", err.message);
-//   }
-//   try {
-//     await extract(newBrowserPath + "impervious-browser.zip", { dir: newBrowserPath });
-//     console.log("Browser extract completed...");
-//   } catch (err) {
-//     console.error("Browser extraction failure... ", err.message);
-//   }
-// }

@@ -1,6 +1,4 @@
-import React, { FC, useState, useEffect } from "react";
-import { ExclamationCircleIcon } from "@heroicons/react/outline";
-import { ipcRenderer } from "electron/renderer";
+import { FC } from "react";
 
 
 const UpdateSection: FC= () => {
@@ -19,7 +17,7 @@ const UpdateSection: FC= () => {
 
 
 function UpdatePage() {
-  
+
     return (
       <div className="h-screen text-center flex flex-col justify-center">
           <UpdateSection/>
