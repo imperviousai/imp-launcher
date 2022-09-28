@@ -27,8 +27,8 @@ module.exports = {
       name: "@electron-forge/publisher-github",
       config: {
         repository: {
-          owner: "impervious",
-          name: "imp-electron-app",
+          owner: "imperviousai",
+          name: "imp-launcher",
           authToken: process.env.GITHUB_TOKEN,
         },
         draft: true,
