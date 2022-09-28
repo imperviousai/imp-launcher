@@ -67,11 +67,11 @@ ipcMain.on("download-browser-and-daemon", async (event, { payload }) => {
     });
 });
 
-ipcMain.on("close-and-deploy", (event, { payload: platform }) => {
+ipcMain.on("close-and-deploy", async (event, { payload: platform }) => {
   console.log("Attempting to spawn browser and daemon again.");
   BrowserWindow.getFocusedWindow()?.close();
   // attempt to launch them both again
-  spawnImpervious();
+  await spawnImpervious();
   spawnBrowser();
   if (platform === "darwin") {
     app.dock.hide();
