@@ -60,7 +60,7 @@ $ rm -rf ~/Impervious
 5. (Optionally) Remove the Impervious Browser profile data.
 
 ```sh
-$ rm -rf ~/Library/Application\ Support/Impervious\ Browser/*
+$ rm -rf ~/Library/Application\ Support/Impervious*
 ```
 6. If upon browser launch you see an error message that says your firefox profile cannot be loaded, you may have some lingering files at the following locations or maybe you moved/deleted your firefox profile data. To remedy this, delete the following files:
 

@@ -36,16 +36,21 @@ if (require("electron-squirrel-startup")) {
   app.quit();
 }
 
-// Make sure to call this ONCE.
-const createStores = (): void => {
-  new Store({
-    configName: "config", // The stores name
-  });
-};
+ // Handle creating/removing shortcuts on Windows when installing/uninstalling.
+ if (require("electron-squirrel-startup")) {
+   // eslint-disable-line global-require
+   app.quit();
+ }
 
-export const createWindow = (): void => {
-  // Create the browser window.
-  const mainWindow = new BrowserWindow({
+ // Make sure to call this ONCE.
+ const createStores = (): void => {
+   new Store({
+     configName: "config", // The stores name
+   });
+ };
+
+ export const createUpdateWindow = (): void => {
+  const updateWindow = new BrowserWindow({
     height: 720,
     width: 1280,
     webPreferences: {

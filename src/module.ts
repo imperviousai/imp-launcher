@@ -6,9 +6,10 @@ import extract from "extract-zip";
 import axios from "axios";
 import stream from "stream";
 import { promisify } from "util";
-import { createWindow } from "./main";
+import { createWindow, createUpdateWindow } from "./main";
 import os from "os";
 import psList from "ps-list";
+
 
 const finished = promisify(stream.finished);
 import log from "electron-log";
@@ -22,12 +23,14 @@ const homePath =
   os.platform() === "darwin"
     ? `/Users/${user}`
     : `/home/${user}`;
-const impDir = homePath + "/Impervious/"
+const binDir = homePath + "/Impervious/"
+const impDir = homePath + "/.imp/"
+fs.mkdirSync(binDir, { recursive: true });
 fs.mkdirSync(impDir, { recursive: true });
-fs.mkdirSync(homePath + "/.imp/", { recursive: true });
 
-const newBrowserPath = impDir + "browser/";
-const newDaemonPath = impDir + "daemon/";
+const newBrowserPath = binDir + "browser/";
+const newDaemonPath = binDir + "daemon/";
+const launcherPath = rootPath;
 
 fs.mkdirSync(newBrowserPath, { recursive: true });
 fs.mkdirSync(newDaemonPath, { recursive: true });
@@ -135,6 +138,20 @@ export const spawnImpervious = () => {
     } catch (err) {
       console.error("Error in pre-existing daemon check", err.message);
     }
+  } catch (err) {
+    console.error("Error in pre-existing daemon check", err.message);
+  }
+
+  if (alreadyRunning) { // if its already running, dont try to start it again
+    console.log("Daemon already running...");
+    //return;
+  }
+
+
+      daemonRespawn(spawn(filepath, {  // this should ensure daemon always runs as long as electron is alive
+        cwd: newDaemonPath,
+        shell: false,
+    }), filepath);
 
     if (alreadyRunning) { // if its already running, dont try to start it again
       console.log("Daemon already running...");
@@ -157,15 +174,18 @@ export const spawnBrowser = () => {
     os.platform() === "darwin"
       ? newBrowserPath + "Impervious.app"
       : newBrowserPath + "Impervious";
-  access(filepath, constants.F_OK, (err) => {
-    if (err) {
-      log.info(`STDERR: ${err.code as string}, REASON: ${err.message}`);
-      log.info(
-        "[STDERR] The browser doesn't appear to be installed. Fetching it now ..."
-      );
-      if (BrowserWindow.getAllWindows().length === 0) createWindow();
+
+  try {
+    accessSync(filepath, constants.R_OK)
+  } catch (err) {
+    console.error("Error in spawnBrowser", err.message);
+    // const counter = await alreadyRunningCheck("imp-launcher");
+    if (BrowserWindow.getAllWindows().length === 0){
+      createWindow();
       return;
     }
+    return;
+  }
     const browserExecutable =
       os.platform() === "darwin"
         ? `${filepath}/Contents/MacOS/Impervious`
@@ -245,6 +265,12 @@ export const downloadDaemon = async (version: string) => {
     console.log("Daemon extract completed...");
   } catch (err) {
     console.error("Daemon extraction failure... ", err.message);
+  }
+  try {
+    // save version info after successful dl/extract
+    writeVersionInformation("daemon", daemonDownloadURL);
+  } catch (err) {
+    console.error("Daemon version info write failure:", err.message);
   }
 }
 
