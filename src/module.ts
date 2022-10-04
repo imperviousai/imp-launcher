@@ -1,14 +1,14 @@
 import { app, BrowserWindow } from "electron";
 import fs from "fs";
 import { access, constants } from "node:fs";
-import { spawn } from "child_process";
+import { ChildProcess, spawn } from "child_process";
 import extract from "extract-zip";
 import axios from "axios";
 import stream from "stream";
 import { promisify } from "util";
 import { createWindow } from "./main";
 import os from "os";
-import tar from "tar";
+import psList from "ps-list";
 
 const finished = promisify(stream.finished);
 import log from "electron-log";
@@ -35,39 +35,80 @@ fs.mkdirSync(newDaemonPath, { recursive: true });
 
 let daemonDownloadURL:string = "";
 let browserDownloadURL:string = "";
+let launcherDownloadURL:string = "";
 
 
-(async () => {
-  const latestDaemon = await axios.get('https://api.github.com/repos/imperviousai/imp-daemon/releases/latest');
-  const latestBrowser = await axios.get('https://api.github.com/repos/imperviousai/imp-browser/releases/latest');
+export const initDownloadInfo = async () => {
+  try {
+  const latestDaemon = await axios.get('https://releases.impervious.live/imp-daemon');
+  const latestBrowser = await axios.get('https://releases.impervious.live/imp-browser');
+  const latestLauncher = await axios.get('https://releases.impervious.live/imp-launcher')
 
   if (os.platform() === "darwin") {
     if (os.arch() === "arm64") {
       latestDaemon.data.assets.forEach((asset: any) => {if (asset.browser_download_url.match(/impervious.*?darwin.*?arm64\.zip$/g)) daemonDownloadURL = asset.browser_download_url});
       latestBrowser.data.assets.forEach((asset: any) => {if (asset.browser_download_url.match(/Impervious\-macosx_arm64\.zip$/g)) browserDownloadURL = asset.browser_download_url});
+      latestLauncher.data.assets.forEach((asset: any) => {if (asset.browser_download_url.match(/Impervious.*?darwin.*?arm64.*?\.zip$/g)) launcherDownloadURL = asset.browser_download_url});
     } else {
       latestDaemon.data.assets.forEach((asset: any) => {if (asset.browser_download_url.match(/impervious.*?darwin.*?amd64\.zip$/g)) daemonDownloadURL = asset.browser_download_url});
       latestBrowser.data.assets.forEach((asset: any) => {if (asset.browser_download_url.match(/Impervious\-macosx_amd64\.zip$/g)) browserDownloadURL = asset.browser_download_url});
+      latestLauncher.data.assets.forEach((asset: any) => {if (asset.browser_download_url.match(/Impervious.*?darwin.*?x64.*?\.zip$/g)) launcherDownloadURL = asset.browser_download_url});
     }
   }
   else if (os.platform() === "linux") {
     if (os.arch() === "x64") {
       latestDaemon.data.assets.forEach((asset: any) => {if (asset.browser_download_url.match(/impervious.*?linux.*?amd64\.zip$/g)) daemonDownloadURL = asset.browser_download_url});
       latestBrowser.data.assets.forEach((asset: any) => {if (asset.browser_download_url.match(/Impervious\-linux_amd64\.zip$/g)) browserDownloadURL = asset.browser_download_url});
+      latestLauncher.data.assets.forEach((asset: any) => {if (asset.browser_download_url.match(/Impervious.*?linux.*?x64.*?\.zip$/g)) launcherDownloadURL = asset.browser_download_url});
     }
   }
   else {
     console.error("Unsupported OS or arch. Exiting");
     process.exit();
   }
+} catch (err) {
+  console.error("Error in initDownloadInfo", err.message);
+}
 
-})();
+}
+
+const daemonRespawn = (imp:ChildProcess, filepath:string) => {
+
+  try {
+    if (imp.pid) {
+      pids.push(imp.pid);
+    } else {
+      console.log("Failed to spawn daemon and push pid");
+    }
+  } catch (error) {
+    log.error(error);
+  }
+
+  imp.stdout?.on("data", (data: string) => {
+    log.info(`[STDOUT] ${data.toString()}`);
+  });
+  imp.stderr?.on("data", (data: string) => {
+    log.error(`[STDERR] ${data.toString()}`);
+  });
+  imp.on("close", () => {
+    log.info("[INFO] The Daemon has shut off");
+    log.info("Attempting to restart the daemon.");
+    try {
+      daemonRespawn(spawn(filepath, {
+        cwd: newDaemonPath,
+        shell: false,
+    }), filepath);
+    } catch (err) {
+      console.error("Failed to spawn daemon in daemonRespawn");
+    }
+  });
+}
 
 
 export const spawnImpervious = () => {
   console.log("Checking for daemon config file");
   const filepath = newDaemonPath + "impervious";
-  access(filepath, constants.F_OK, (err) => {
+  access(filepath, constants.F_OK, async (err) => {
     if (err) {
       console.error("SpawnImpervious error: ", err.message);
       log.info(`STDERR: ${err.code as string}, REASON: ${err.message}`);
@@ -76,30 +117,38 @@ export const spawnImpervious = () => {
       return;
     }
 
-    const imp = spawn(filepath, {
-      cwd: newDaemonPath,
-      shell: false,
-    });
+    let alreadyRunning = false;
 
     try {
-      if (imp.pid) {
-        pids.push(imp.pid);
-      } else {
-        console.log("Failed to spawn daemon and push pid");
+      const runningProcesses = await psList();
+
+      for (const proc of runningProcesses) {
+
+        if (os.platform() === "darwin" || os.platform() === "linux"){
+          if (proc.cmd?.includes("daemon/impervious")) {
+            console.log("Found running match: ", proc.cmd)
+            alreadyRunning = true;
+            process.kill(proc.pid); // kill any previous daemons in process list
+          }
+        }
       }
-    } catch (error) {
-      log.error(error);
+    } catch (err) {
+      console.error("Error in pre-existing daemon check", err.message);
     }
 
-    imp.stdout.on("data", (data: string) => {
-      log.info(`[STDOUT] ${data.toString()}`);
-    });
-    imp.stderr.on("data", (data: string) => {
-      log.error(`[STDERR] ${data.toString()}`);
-    });
-    imp.on("close", () => {
-      log.info("[INFO] The Daemon has shut off");
-    });
+    if (alreadyRunning) { // if its already running, dont try to start it again
+      console.log("Daemon already running...");
+      //return;
+    }
+
+    try {
+      daemonRespawn(spawn(filepath, {  // this should ensure daemon always runs as long as electron is alive
+        cwd: newDaemonPath,
+        shell: false,
+    }), filepath);
+    } catch (err) {
+      console.error("Failed to spawn daemon in spawnImpervious");
+    }
   });
 };
 
@@ -121,24 +170,39 @@ export const spawnBrowser = () => {
       os.platform() === "darwin"
         ? `${filepath}/Contents/MacOS/Impervious`
         : `${filepath}/Impervious`;
-    const browser = spawn(browserExecutable, {
-      cwd: filepath,
-      detached: true,
-    });
 
+    try {
+      const browser = spawn(browserExecutable, {
+        cwd: filepath,
+        detached: true,
+      });
+      if (browser.pid) {
+        pids.push(browser.pid);
+      } else {
+        console.log("Failed to spawn browser and push pid");
+      }
+
+      app.focus();
+
+      browser.stdout.on("data", (data: string) => {
+        log.info(`[STDOUT] ${data.toString()}`);
+      });
+      browser.stderr.on("data", (data: string) => {
+        log.error(`[STDERR] ${data.toString()}`);
+      });
+      browser.on("close", () => {
+        log.info("[INFO] The browser has shut off");
+        log.info("Killing the Daemon and Electron App");
+        app.quit(); // close electron when browser closes
+      });
+
+
+    } catch (err) {
+      console.error("Failed to spawn browser in spawnBrowser or push pid.");
+    }
     app.focus(); // bring app back to foreground
 
-    browser.stdout.on("data", (data: string) => {
-      log.info(`[STDOUT] ${data.toString()}`);
-    });
-    browser.stderr.on("data", (data: string) => {
-      log.error(`[STDERR] ${data.toString()}`);
-    });
-    browser.on("close", () => {
-      log.info("[INFO] The browser has shut off");
-      log.info("Killing the Daemon and Electron App");
-      app.quit(); // close electron when browser closes
-    });
+
   });
 };
 

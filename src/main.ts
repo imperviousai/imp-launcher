@@ -12,7 +12,7 @@ import isDev from "electron-is-dev";
 import Store from "electron-persist-secure/lib/store";
 // Import all IPCs to make sure they register their respective listeners
 import "./app/ipc/main";
-import { spawnBrowser, spawnImpervious } from "./module";
+import { spawnBrowser, spawnImpervious, initDownloadInfo } from "./module";
 import unhandled from "electron-unhandled";
 import log from "electron-log";
 import os from "os";
@@ -68,12 +68,20 @@ export const createWindow = (): void => {
   }
 };
 
+  const gotTheLock = app.requestSingleInstanceLock()
+
+  if (!gotTheLock) {
+    app.quit()
+  }
+
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.on("ready", () => {
+app.on("ready", async () => {
   createStores();
   // createWindow();
+  console.log("[INFO] Setting up download URLs");
+  await initDownloadInfo();
   console.log("[INFO] Spawning the impervious daemon");
   spawnImpervious();
   console.log("[INFO] Spawning the impervious browser");
@@ -96,20 +104,20 @@ export const pids: Array<number> = []; // holds pids of daemon and browser windo
 
 app.on("before-quit", () => {
   // when browser closes, it will fire close(). this will kill daemon and ensure daemon always dies when electron or firefox goes away
-  try {
     console.info("Pids in list: ", pids);
     pids.forEach((pid) => {
+     try {
       process.kill(pid);
+     } catch (error) {
+       console.error("Error in PID deletion: ", error.message);
+     }
     });
-  } catch (error) {
-    console.error("Error in PID deletion: ", error.message);
-  }
 });
 
 app.on("activate", () => {
   // On OS X it's common to re-create a window in the app when the
   // dock icon is clicked and there are no other windows open.
-  if (BrowserWindow.getAllWindows().length === 0) {
-    createWindow();
-  }
+  // if (BrowserWindow.getAllWindows().length === 0) {
+  //   createWindow();
+  // }
 });
