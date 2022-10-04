@@ -49,8 +49,9 @@ if (require("electron-squirrel-startup")) {
    });
  };
 
- export const createUpdateWindow = (): void => {
-  const updateWindow = new BrowserWindow({
+ export const createWindow = (): void => {
+  // Create the browser window.
+  const mainWindow = new BrowserWindow({
     height: 720,
     width: 1280,
     webPreferences: {

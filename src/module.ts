@@ -6,7 +6,7 @@ import extract from "extract-zip";
 import axios from "axios";
 import stream from "stream";
 import { promisify } from "util";
-import { createWindow, createUpdateWindow } from "./main";
+import { createWindow } from "./main";
 import os from "os";
 import psList from "ps-list";
 
@@ -30,7 +30,6 @@ fs.mkdirSync(impDir, { recursive: true });
 
 const newBrowserPath = binDir + "browser/";
 const newDaemonPath = binDir + "daemon/";
-const launcherPath = rootPath;
 
 fs.mkdirSync(newBrowserPath, { recursive: true });
 fs.mkdirSync(newDaemonPath, { recursive: true });
@@ -138,9 +137,6 @@ export const spawnImpervious = () => {
     } catch (err) {
       console.error("Error in pre-existing daemon check", err.message);
     }
-  } catch (err) {
-    console.error("Error in pre-existing daemon check", err.message);
-  }
 
   if (alreadyRunning) { // if its already running, dont try to start it again
     console.log("Daemon already running...");
@@ -176,16 +172,14 @@ export const spawnBrowser = () => {
       : newBrowserPath + "Impervious";
 
   try {
-    accessSync(filepath, constants.R_OK)
-  } catch (err) {
-    console.error("Error in spawnBrowser", err.message);
-    // const counter = await alreadyRunningCheck("imp-launcher");
-    if (BrowserWindow.getAllWindows().length === 0){
-      createWindow();
-      return;
-    }
-    return;
-  }
+    access(filepath, constants.F_OK, (err) => {
+      if (err) {
+        console.error("SpawnImpervious error: ", err.message);
+        log.info(`STDERR: ${err.code as string}, REASON: ${err.message}`);
+        log.info("[STDERR] The Daemon doesn't exists. Fetching it now ...");
+        if (BrowserWindow.getAllWindows().length === 0) createWindow();
+        return;
+      }
     const browserExecutable =
       os.platform() === "darwin"
         ? `${filepath}/Contents/MacOS/Impervious`
@@ -202,6 +196,7 @@ export const spawnBrowser = () => {
         console.log("Failed to spawn browser and push pid");
       }
 
+
       app.focus();
 
       browser.stdout.on("data", (data: string) => {
@@ -215,15 +210,14 @@ export const spawnBrowser = () => {
         log.info("Killing the Daemon and Electron App");
         app.quit(); // close electron when browser closes
       });
-
-
-    } catch (err) {
-      console.error("Failed to spawn browser in spawnBrowser or push pid.");
     }
-    app.focus(); // bring app back to foreground
-
-
+    catch (err) {
+      console.error("");
+    }
   });
+} catch (err) {
+  console.error("Error in access spawnBrowser");
+}
 };
 
 
@@ -265,12 +259,6 @@ export const downloadDaemon = async (version: string) => {
     console.log("Daemon extract completed...");
   } catch (err) {
     console.error("Daemon extraction failure... ", err.message);
-  }
-  try {
-    // save version info after successful dl/extract
-    writeVersionInformation("daemon", daemonDownloadURL);
-  } catch (err) {
-    console.error("Daemon version info write failure:", err.message);
   }
 }
 
