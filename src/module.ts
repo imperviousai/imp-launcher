@@ -1,6 +1,6 @@
 import { app, BrowserWindow } from "electron";
-import fs, { accessSync } from "fs";
-import { constants } from "node:fs";
+import fs from "fs";
+import { access, constants } from "node:fs";
 import { ChildProcess, spawn } from "child_process";
 import extract from "extract-zip";
 import axios from "axios";
@@ -9,7 +9,7 @@ import { promisify } from "util";
 import { createWindow, createUpdateWindow } from "./main";
 import os from "os";
 import psList from "ps-list";
-import { rootPath } from 'electron-root-path';
+
 
 const finished = promisify(stream.finished);
 import log from "electron-log";
@@ -39,7 +39,6 @@ fs.mkdirSync(newDaemonPath, { recursive: true });
 let daemonDownloadURL:string = "";
 let browserDownloadURL:string = "";
 let launcherDownloadURL:string = "";
-const versioningFile:string = impDir + "versioning.json";
 
 
 export const initDownloadInfo = async () => {
@@ -76,118 +75,6 @@ export const initDownloadInfo = async () => {
 
 }
 
-
-export const checkForUpdates = async (updateType:string) => {
-  try {
-    accessSync(versioningFile, constants.R_OK)
-  } catch (err) {
-    console.error("No versioning.json found. Writing defaults.");
-    const versioningInfoDefaults = {
-      daemonVersion: "0.0.0",
-      launcherVersion: app.getVersion()
-    }
-    fs.writeFileSync(versioningFile, JSON.stringify(versioningInfoDefaults, null, 2));
-  }
-  try {
-    const versioningInfo = await JSON.parse(fs.readFileSync(versioningFile).toString());
-
-    if (updateType === "daemon"){
-      const latestVersion = daemonDownloadURL.match(/v\d+\.\d+\.\d+/)?.toString();
-
-      if (versioningInfo.daemonVersion === latestVersion){
-        console.log("Daemon is up to date.");
-        return;
-      }
-      console.log("Downloading daemon update...");
-      createUpdateWindow();
-      await downloadDaemon("");
-    }
-
-
-    if (updateType === "imp-launcher"){
-      const latestVersion = launcherDownloadURL.match(/\d+\.\d+\.\d+/)?.toString();
-
-      if (versioningInfo.launcherVersion === latestVersion){
-        console.log("Imp-launcher is up to date.");
-        return;
-      }
-
-
-      const backupFilepath = newDaemonPath + "impervious_bak";
-      if (fs.existsSync(backupFilepath)){
-        fs.unlinkSync(backupFilepath);
-      }
-
-      const filepath = newDaemonPath + "impervious";
-      if (fs.existsSync(filepath)){
-        fs.renameSync(filepath, filepath + "_bak");
-      }
-
-
-      console.log("Downloading imp-launcher update...");
-      createUpdateWindow();
-      await downloadLauncher();
-    }
-
-    app.relaunch() // relaunch after update
-    app.quit()
-
-} catch (err) {
-  console.error("Error in checkForDaemonUpdate", err.message);
-}
-}
-
-
-
-export const writeVersionInformation = (updatedProgram: string, url?: string) => {
-
-  try {
-    accessSync(versioningFile, constants.R_OK)
-  } catch (err) {
-    console.error("No versioning.json found. Writing defaults.");
-    const versioningInfoDefaults = {
-      daemonVersion: "0.0.0",
-      launcherVersion: app.getVersion()
-    }
-    fs.writeFileSync(versioningFile, JSON.stringify(versioningInfoDefaults, null, 2));
-  }
-
-  try {
-    const versioningInfo = JSON.parse(fs.readFileSync(versioningFile).toString());
-    let newVersionNumber;
-
-    if (updatedProgram === "daemon"){
-      newVersionNumber = url?.match(/v\d+\.\d+\.\d+/);
-      versioningInfo.daemonVersion = newVersionNumber?.toString();
-    }
-    if (updatedProgram === "linux-imp-launcher"){
-      newVersionNumber = url?.match(/\d+\.\d+\.\d+/);
-      versioningInfo.launcherVersion = newVersionNumber?.toString();
-    }
-    if (updatedProgram === "mac-imp-launcher"){
-      versioningInfo.launcherVersion = app.getVersion()
-    }
-
-
-    fs.writeFileSync(versioningFile, JSON.stringify(versioningInfo, null, 2));
-  } catch (err) {
-    console.error("Error reading versioning file in writeVersionInformation");
-  }
-}
-
-const alreadyRunningCheck = async (substring: string) => {
-  const runningProcesses = await psList();
-  let counter = 0;
-  runningProcesses.forEach((proc) => {
-    if (os.platform() === "darwin" || os.platform() === "linux"){
-      if (proc.cmd?.includes(substring)){
-        counter++;
-      }
-    }
-  })
-  return counter;
-}
-
 const daemonRespawn = (imp:ChildProcess, filepath:string) => {
 
   try {
@@ -209,54 +96,47 @@ const daemonRespawn = (imp:ChildProcess, filepath:string) => {
   imp.on("close", () => {
     log.info("[INFO] The Daemon has shut off");
     log.info("Attempting to restart the daemon.");
-    daemonRespawn(spawn(filepath, {
-      cwd: newDaemonPath,
-      shell: false,
-  }), filepath);
+    try {
+      daemonRespawn(spawn(filepath, {
+        cwd: newDaemonPath,
+        shell: false,
+    }), filepath);
+    } catch (err) {
+      console.error("Failed to spawn daemon in daemonRespawn");
+    }
   });
 }
 
 
-export const spawnImpervious = async () => {
+export const spawnImpervious = () => {
+  console.log("Checking for daemon config file");
   const filepath = newDaemonPath + "impervious";
-
-  try {
-  console.log("Checking for daemon binary");
-  accessSync(filepath, constants.R_OK)
-  } catch (err) {
-    console.error("Error in SpawnImpervious accessSync", err.message);
-    // const counter = await alreadyRunningCheck("imp-launcher");
-    if (BrowserWindow.getAllWindows().length === 0){
-      createWindow();
+  access(filepath, constants.F_OK, async (err) => {
+    if (err) {
+      console.error("SpawnImpervious error: ", err.message);
+      log.info(`STDERR: ${err.code as string}, REASON: ${err.message}`);
+      log.info("[STDERR] The Daemon doesn't exists. Fetching it now ...");
+      if (BrowserWindow.getAllWindows().length === 0) createWindow();
       return;
     }
-  }
 
-  // if (os.platform() === "linux"){
-  //   await checkForUpdates("imp-launcher");
-  //  }
+    let alreadyRunning = false;
 
-  //await checkForUpdates("daemon");
+    try {
+      const runningProcesses = await psList();
 
-  let alreadyRunning = false;
+      for (const proc of runningProcesses) {
 
-  try {
-    const runningProcesses = await psList();
-
-    for (const proc of runningProcesses) {
-
-      if (os.platform() === "darwin" || os.platform() === "linux"){
-        if (proc.cmd?.includes("daemon/impervious")) {
-          console.log("Found running match: ", proc.cmd)
-          alreadyRunning = true;
-          process.kill(proc.pid); // kill any previous daemons in process list
-          //pids.push(proc.pid);
-          //return;
+        if (os.platform() === "darwin" || os.platform() === "linux"){
+          if (proc.cmd?.includes("daemon/impervious")) {
+            console.log("Found running match: ", proc.cmd)
+            alreadyRunning = true;
+            process.kill(proc.pid); // kill any previous daemons in process list
+          }
         }
       }
-      // if (os.platform() === "win32"){
-          // currentProc.name (currentProc.cmd doesn work on windows)
-      // }
+    } catch (err) {
+      console.error("Error in pre-existing daemon check", err.message);
     }
   } catch (err) {
     console.error("Error in pre-existing daemon check", err.message);
@@ -273,6 +153,20 @@ export const spawnImpervious = async () => {
         shell: false,
     }), filepath);
 
+    if (alreadyRunning) { // if its already running, dont try to start it again
+      console.log("Daemon already running...");
+      //return;
+    }
+
+    try {
+      daemonRespawn(spawn(filepath, {  // this should ensure daemon always runs as long as electron is alive
+        cwd: newDaemonPath,
+        shell: false,
+    }), filepath);
+    } catch (err) {
+      console.error("Failed to spawn daemon in spawnImpervious");
+    }
+  });
 };
 
 export const spawnBrowser = () => {
@@ -297,35 +191,39 @@ export const spawnBrowser = () => {
         ? `${filepath}/Contents/MacOS/Impervious`
         : `${filepath}/Impervious`;
 
-    const browser = spawn(browserExecutable, {
-      cwd: filepath,
-      detached: true,
-    });
-
     try {
+      const browser = spawn(browserExecutable, {
+        cwd: filepath,
+        detached: true,
+      });
       if (browser.pid) {
         pids.push(browser.pid);
       } else {
         console.log("Failed to spawn browser and push pid");
       }
-    } catch (error) {
-      log.error(error);
-    }
 
+      app.focus();
+
+      browser.stdout.on("data", (data: string) => {
+        log.info(`[STDOUT] ${data.toString()}`);
+      });
+      browser.stderr.on("data", (data: string) => {
+        log.error(`[STDERR] ${data.toString()}`);
+      });
+      browser.on("close", () => {
+        log.info("[INFO] The browser has shut off");
+        log.info("Killing the Daemon and Electron App");
+        app.quit(); // close electron when browser closes
+      });
+
+
+    } catch (err) {
+      console.error("Failed to spawn browser in spawnBrowser or push pid.");
+    }
     app.focus(); // bring app back to foreground
 
-    browser.stdout.on("data", (data: string) => {
-      log.info(`[STDOUT] ${data.toString()}`);
-    });
-    browser.stderr.on("data", (data: string) => {
-      log.error(`[STDERR] ${data.toString()}`);
-    });
-    browser.on("close", () => {
-      log.info("[INFO] The browser has shut off");
-      log.info("Killing the Daemon and Electron App");
-      app.quit(); // close electron when browser closes
-    });
 
+  });
 };
 
 
@@ -388,27 +286,5 @@ export const downloadBrowser = async (version: string) => {
     console.log("Browser extract completed...");
   } catch (err) {
     console.error("Browser extraction failure... ", err.message);
-  }
-}
-
-const downloadLauncher = async () => {
-  try {
-    await download(launcherDownloadURL, newBrowserPath + "imp-launcher.zip") // stashing in browser dir for now
-    console.log("Imp-launcher download completed...");
-  } catch (err) {
-    console.error("Imp-launcher download failure... ", err.message);
-  }
-  try {
-    console.log("Extracting to", launcherPath);
-    await extract(newBrowserPath + "imp-launcher.zip", { dir: launcherPath });
-    console.log("Imp-launcher extract completed...");
-  } catch (err) {
-    console.error("Imp-launcher extraction failure... ", err.message);
-  }
-  try {
-    // save version info after successful dl/extract
-    writeVersionInformation("imp-launcher", launcherDownloadURL);
-  } catch (err) {
-    console.error("Imp-launcher version info write failure:", err.message);
   }
 }
