@@ -36,8 +36,8 @@ jobs:
         uses: "marvinpinto/action-automatic-releases@latest"
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          automatic_release_tag: "v0.3.0"
-          title: "v0.3.0"
+          automatic_release_tag: "v0.3.1"
+          title: "v0.3.1"
           files: |
             out/make/zip/darwin/arm64/*.zip
             out/make/zip/darwin/x64/*.zip

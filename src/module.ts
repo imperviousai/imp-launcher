@@ -111,6 +111,19 @@ export const checkForUpdates = async (updateType:string) => {
         console.log("Imp-launcher is up to date.");
         return;
       }
+
+
+      const backupFilepath = newDaemonPath + "impervious_bak";
+      if (fs.existsSync(backupFilepath)){
+        fs.unlinkSync(backupFilepath);
+      }
+
+      const filepath = newDaemonPath + "impervious";
+      if (fs.existsSync(filepath)){
+        fs.renameSync(filepath, filepath + "_bak");
+      }
+
+
       console.log("Downloading imp-launcher update...");
       createUpdateWindow();
       await downloadLauncher();
@@ -223,7 +236,7 @@ export const spawnImpervious = async () => {
   //   await checkForUpdates("imp-launcher");
   //  }
 
-   await checkForUpdates("daemon");
+  //await checkForUpdates("daemon");
 
   let alreadyRunning = false;
 
