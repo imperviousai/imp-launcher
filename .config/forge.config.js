@@ -13,18 +13,18 @@ module.exports = {
       "./src/extraResources/browser"
     ],
     icon: path.join(packageAssetsPath, "icons", "mac", "icon.icns"),
-    // osxSign: {
-    //   entitlements: "entitlements.plist",
-    //   "entitlements-inherit": "entitlements.plist",
-    //   "gatekeeper-assess": false,
-    //   hardenedRuntime: true,
-    //   identity:
-    //     "Developer ID Application: Impervious Technologies Inc. (S722DY52YY)",
-    // },
-    // osxNotarize: {
-    //   appleId: "support@impervious.ai",
-    //   appleIdPassword: process.env["AC_PASSWORD"],
-    // },
+    osxSign: {
+      entitlements: "entitlements.plist",
+      "entitlements-inherit": "entitlements.plist",
+      "gatekeeper-assess": false,
+      hardenedRuntime: true,
+      identity:
+        "Developer ID Application: Impervious Technologies Inc. (S722DY52YY)",
+    },
+    osxNotarize: {
+      appleId: "support@impervious.ai",
+      appleIdPassword: process.env["AC_PASSWORD"],
+    },
   },
   publishers: [
     {
