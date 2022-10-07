@@ -7,7 +7,7 @@
  * https://electronjs.org/docs/tutorial/application-architecture#main-and-renderer-processes
  */
 
-import { app } from "electron";
+import { app, Tray, Menu } from "electron";
 import Store from "electron-persist-secure/lib/store";
 // Import all IPCs to make sure they register their respective listeners
 import "./app/ipc/main";
@@ -15,6 +15,7 @@ import { spawnBrowser, spawnImpervious, initDownloadInfo } from "./module";
 import unhandled from "electron-unhandled";
 import log from "electron-log";
 import os from "os";
+import path from 'path'
 
 // global exception handler
 unhandled({
@@ -49,9 +50,26 @@ if (require("electron-squirrel-startup")) {
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
+
 app.on("ready", async () => {
+
   createStores();
-  // createWindow();
+  if (process.platform === "darwin"){
+    try {
+      if (!app.isInApplicationsFolder()){
+        app.moveToApplicationsFolder(); // ensure we arent a translocated app in r/o
+      }
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      // require('update-electron-app')({
+      //   repo: 'imperviousai/imp-launcher',
+      //   updateInterval: '1 hour',
+      //   logger: log
+      //  })
+    } catch (err){
+      console.error("Error in main when moving to /applications");
+    }
+
+   }
   console.log("[INFO] Setting up download URLs");
   await initDownloadInfo();
   console.log("[INFO] Spawning the impervious daemon");

@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from "electron";
+import { app, BrowserWindow, Tray, Menu } from "electron";
 import fs from "fs";
 import { access, constants } from "node:fs";
 import { ChildProcess, spawn } from "child_process";
@@ -19,15 +19,15 @@ const homePath =
   os.platform() === "darwin"
     ? `/Users/${user}`
     : `/home/${user}`;
-const binDir =
-  os.platform() === "darwin"
-    ? homePath + "/Library/Application Support/Impervious/"
-    : homePath + "/Impervious/"
+// const binDir =
+//   os.platform() === "darwin"
+//     ? homePath + "/Library/Application Support/Impervious/"
+//     : homePath + "/Impervious/"
 const impDir =
   os.platform() === "darwin"
   ? homePath + "/Library/Application Support/Impervious/.imp/"
   : homePath + "/.imp/"
-fs.mkdirSync(binDir, { recursive: true });
+// fs.mkdirSync(binDir, { recursive: true });
 fs.mkdirSync(impDir, { recursive: true });
 
 // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
@@ -37,6 +37,26 @@ const electronBrowserPath = path.join(root, './browser');
 
 
 export const initDownloadInfo = async () => {
+
+  // try {
+
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+  // const tray:Tray = new Tray(path.join(root, '16X16.png'));
+
+  // const menu = Menu.buildFromTemplate([
+  //   {
+  //     label: 'Close the Impervious Manager',
+  //     click() { app. quit(); }
+  //   }
+  // ])
+
+  // tray.setToolTip('Impervious Manager');
+  // tray.setContextMenu(menu);
+
+  // } catch (err) {
+  //   console.error("Error in tray creation", err.message);
+  // }
+
   try {
     console.log("Attempting to unzip Resources");
     await extract(electronBrowserPath + "/Impervious.zip", {dir: electronBrowserPath});

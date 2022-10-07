@@ -10,7 +10,8 @@ module.exports = {
     name: "Impervious",
     extraResource: [
       "./src/extraResources/daemon",
-      "./src/extraResources/browser"
+      "./src/extraResources/browser",
+      "./assets/package/icons/png/16x16.png"
     ],
     icon: path.join(packageAssetsPath, "icons", "mac", "icon.icns"),
     osxSign: {
