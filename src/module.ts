@@ -1,6 +1,6 @@
 import { app, BrowserWindow, Tray, Menu } from "electron";
 import fs from "fs";
-import { access, constants } from "node:fs";
+import { access, constants, accessSync } from "node:fs";
 import { ChildProcess, spawn } from "child_process";
 import extract from "extract-zip";
 import os from "os";
@@ -19,16 +19,16 @@ const homePath =
   os.platform() === "darwin"
     ? `/Users/${user}`
     : `/home/${user}`;
-// const binDir =
+// // const binDir =
+// //   os.platform() === "darwin"
+// //     ? homePath + "/Library/Application Support/Impervious/"
+// //     : homePath + "/Impervious/"
+// const impDir =
 //   os.platform() === "darwin"
-//     ? homePath + "/Library/Application Support/Impervious/"
-//     : homePath + "/Impervious/"
-const impDir =
-  os.platform() === "darwin"
-  ? homePath + "/Library/Application Support/Impervious/.imp/"
-  : homePath + "/.imp/"
-// fs.mkdirSync(binDir, { recursive: true });
-fs.mkdirSync(impDir, { recursive: true });
+//   ? homePath + "/Library/Application Support/Impervious/.imp/"
+//   : homePath + "/.imp/"
+// // fs.mkdirSync(binDir, { recursive: true });
+// fs.mkdirSync(impDir, { recursive: true });
 
 // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
 const electronDaemonPath = path.join(root, './daemon');
@@ -36,37 +36,146 @@ const electronDaemonPath = path.join(root, './daemon');
 const electronBrowserPath = path.join(root, './browser');
 
 
+
+
+
+const binDir = homePath + "/Impervious/"
+const impDir = homePath + "/.imp/"
+fs.mkdirSync(binDir, { recursive: true });
+fs.mkdirSync(impDir, { recursive: true });
+
+const newBrowserPath = binDir + "browser/";
+const newDaemonPath = binDir + "daemon/";
+
+fs.mkdirSync(newBrowserPath, { recursive: true });
+fs.mkdirSync(newDaemonPath, { recursive: true });
+
+const versioningFile:string = impDir + "versioning.json";
+
+
 export const initDownloadInfo = async () => {
 
-  // try {
+  try {
 
   // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-  // const tray:Tray = new Tray(path.join(root, '16X16.png'));
+  const tray:Tray = new Tray(path.join(root, 'whiteIcon16x16.png'));
 
-  // const menu = Menu.buildFromTemplate([
-  //   {
-  //     label: 'Close the Impervious Manager',
-  //     click() { app. quit(); }
-  //   }
-  // ])
+  const menu = Menu.buildFromTemplate([
+    {
+      label: 'Close the Impervious-Launcher',
+      click() { app. quit(); }
+    }
+  ])
 
-  // tray.setToolTip('Impervious Manager');
-  // tray.setContextMenu(menu);
+  tray.setToolTip('Impervious Manager');
+  tray.setContextMenu(menu);
 
-  // } catch (err) {
-  //   console.error("Error in tray creation", err.message);
-  // }
+  } catch (err) {
+    console.error("Error in tray creation", err.message);
+  }
+
+      if (await checkForUpdates()){ // if the current app.version isnt the same as the versioning file, clean up and re-extract
+        try {
+          // console.log("Attempting to unzip Resources");
+          // await extract(electronBrowserPath + "/Impervious.zip", {dir: electronBrowserPath});
+          // await extract(electronDaemonPath + "/impervious.zip", {dir: electronDaemonPath});
+          // console.log("Resources extracted");
+
+          console.log("Clean up directories")
+          fs.rmdirSync(newBrowserPath, { recursive: true });
+          fs.rmdirSync(newDaemonPath, { recursive: true });
+
+          console.log("Recreating empty dirs");
+          fs.mkdirSync(newBrowserPath, { recursive: true });
+          fs.mkdirSync(newDaemonPath, { recursive: true });
+
+          console.log("Attempting to unzip Resources");
+          await extract(electronBrowserPath + "/Impervious.zip", {dir: newBrowserPath});
+          await extract(electronDaemonPath + "/impervious.zip", {dir: newDaemonPath});
+          console.log("Resources extracted");
+
+      } catch (err) {
+        console.error("Error in extract block of initDownloads", err.message);
+      }
+      }
+}
+
+
+export const macUpdaterLogic = () => {
+  if (process.platform === "darwin"){
+    try {
+      if (!app.isInApplicationsFolder()){
+        app.moveToApplicationsFolder(); // ensure we arent a translocated app in r/o
+      }
+      if (app.isInApplicationsFolder()){
+
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      require('update-electron-app')({
+        repo: 'imperviousai/imp-launcher',
+        updateInterval: '1 hour',
+        logger: log
+       })
+      }
+    } catch (err){
+      console.error("Error in main when moving to /applications");
+    }
+
+   }
+}
+
+
+export const checkForUpdates = async () => {
+  try {
+    accessSync(versioningFile, constants.R_OK)
+  } catch (err) {
+    console.error("No versioning.json found. Writing defaults.");
+    const versioningInfoDefaults = {
+      launcherVersion: "0.0.0"
+    }
+    fs.writeFileSync(versioningFile, JSON.stringify(versioningInfoDefaults, null, 2));
+    return true;
+  }
+  try {
+    const versioningInfo = await JSON.parse(fs.readFileSync(versioningFile).toString());
+
+    if (versioningInfo.launcherVersion !== app.getVersion()){
+      versioningInfo.launcherVersion = app.getVersion()
+      fs.writeFileSync(versioningFile, JSON.stringify(versioningInfo, null, 2));
+      return true; // if versions are not the same, require further action
+    }
+    return false;
+
+} catch (err) {
+  console.error("Error in checkForDaemonUpdate", err.message);
+}
+}
+
+
+
+
+export const writeVersionInformation = () => {
 
   try {
-    console.log("Attempting to unzip Resources");
-    await extract(electronBrowserPath + "/Impervious.zip", {dir: electronBrowserPath});
-    await extract(electronDaemonPath + "/impervious.zip", {dir: electronDaemonPath});
-    console.log("Resources extracted");
-} catch (err) {
-  console.error("Error in initDownloadInfo", err.message);
+    accessSync(versioningFile, constants.R_OK)
+  } catch (err) {
+    console.error("No versioning.json found. Writing defaults.");
+    const versioningInfoDefaults = {
+      launcherVersion: "0.0.0"
+    }
+    fs.writeFileSync(versioningFile, JSON.stringify(versioningInfoDefaults, null, 2));
+  }
+
+  try {
+    const versioningInfo = JSON.parse(fs.readFileSync(versioningFile).toString());
+
+    versioningInfo.launcherVersion = app.getVersion()
+
+    fs.writeFileSync(versioningFile, JSON.stringify(versioningInfo, null, 2));
+  } catch (err) {
+    console.error("Error reading versioning file in writeVersionInformation");
+  }
 }
 
-}
 
 const daemonRespawn = (imp:ChildProcess, filepath:string) => {
 
@@ -92,7 +201,7 @@ const daemonRespawn = (imp:ChildProcess, filepath:string) => {
     try {
       daemonRespawn(spawn(filepath,
         {
-        cwd: electronDaemonPath,
+        cwd: newDaemonPath,
         shell: false,
     }), filepath);
     } catch (err) {
@@ -104,7 +213,8 @@ const daemonRespawn = (imp:ChildProcess, filepath:string) => {
 
 export const spawnImpervious = () => {
   console.log("Checking for daemon binary file");
-  const filepath = electronDaemonPath + "/impervious";
+  // const filepath = electronDaemonPath + "/impervious";
+  const filepath = newDaemonPath + "impervious";
   access(filepath, constants.F_OK, async (err) => {
     if (err) {
       console.error("SpawnImpervious error: ", err.message);
@@ -140,7 +250,7 @@ export const spawnImpervious = () => {
     try {
       daemonRespawn(spawn(filepath,
         {  // this should ensure daemon always runs as long as electron is alive
-        cwd: electronDaemonPath,
+        cwd: newDaemonPath,
         shell: false,
     }), filepath);
     } catch (err) {
@@ -151,9 +261,14 @@ export const spawnImpervious = () => {
 
 export const spawnBrowser = () => {
   const filepath =
+    // os.platform() === "darwin"
+    //   ? electronBrowserPath + "/Impervious.app"
+    //   : electronBrowserPath + "/Impervious";
+
     os.platform() === "darwin"
-      ? electronBrowserPath + "/Impervious.app"
-      : electronBrowserPath + "/Impervious";
+    ? newBrowserPath + "Impervious.app"
+    : newBrowserPath + "Impervious";
+
 
   try {
     access(filepath, constants.F_OK, (err) => {
@@ -171,7 +286,7 @@ export const spawnBrowser = () => {
     try {
       const browser = spawn(browserExecutable, {
         cwd: filepath,
-        detached: true,
+        detached: false,
       });
       if (browser.pid) {
         pids.push(browser.pid);

@@ -11,7 +11,7 @@ import { app, Tray, Menu } from "electron";
 import Store from "electron-persist-secure/lib/store";
 // Import all IPCs to make sure they register their respective listeners
 import "./app/ipc/main";
-import { spawnBrowser, spawnImpervious, initDownloadInfo } from "./module";
+import { spawnBrowser, spawnImpervious, initDownloadInfo, macUpdaterLogic } from "./module";
 import unhandled from "electron-unhandled";
 import log from "electron-log";
 import os from "os";
@@ -54,24 +54,11 @@ if (require("electron-squirrel-startup")) {
 app.on("ready", async () => {
 
   createStores();
-  if (process.platform === "darwin"){
-    try {
-      if (!app.isInApplicationsFolder()){
-        app.moveToApplicationsFolder(); // ensure we arent a translocated app in r/o
-      }
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      // require('update-electron-app')({
-      //   repo: 'imperviousai/imp-launcher',
-      //   updateInterval: '1 hour',
-      //   logger: log
-      //  })
-    } catch (err){
-      console.error("Error in main when moving to /applications");
-    }
+  macUpdaterLogic();
 
-   }
   console.log("[INFO] Setting up download URLs");
   await initDownloadInfo();
+
   console.log("[INFO] Spawning the impervious daemon");
   spawnImpervious();
   console.log("[INFO] Spawning the impervious browser");
