@@ -2,7 +2,7 @@ name: Build, Sign, Push Artifacts
 on:
   push:
     branches:
-      - full-package
+      - master
 
 jobs:
   macosx_arm64:
@@ -23,7 +23,7 @@ jobs:
           p12-file-base64: ${{ secrets.CERTIFICATES_P12 }}
           p12-password: ${{ secrets.CERTIFICATES_P12_PASSWORD }}
       - name: Get Daemon
-        run: wget -O ./src/extraResources/daemon/impervious.zip https://github.com/imperviousai/imp-daemon/releases/download/v1.0.5/impervious_1.0.5_darwin_arm64.zip
+        run: wget -O ./src/extraResources/daemon/impervious.zip https://github.com/imperviousai/imp-daemon/releases/download/v1.1.0/impervious_1.1.0_darwin_arm64.zip
       - name: Get Browser
         run: wget -O ./src/extraResources/browser/Impervious.zip https://github.com/imperviousai/imp-browser/releases/download/0.1.1-alpha/Impervious-macosx_arm64.zip
       - name: Build and Sign
@@ -60,7 +60,7 @@ jobs:
           p12-file-base64: ${{ secrets.CERTIFICATES_P12 }}
           p12-password: ${{ secrets.CERTIFICATES_P12_PASSWORD }}
       - name: Get Daemon
-        run: wget -O ./src/extraResources/daemon/impervious.zip https://github.com/imperviousai/imp-daemon/releases/download/v1.0.5/impervious_1.0.5_darwin_amd64.zip
+        run: wget -O ./src/extraResources/daemon/impervious.zip https://github.com/imperviousai/imp-daemon/releases/download/v1.1.0/impervious_1.1.0_darwin_amd64.zip
       - name: Get Browser
         run: wget -O ./src/extraResources/browser/Impervious.zip https://github.com/imperviousai/imp-browser/releases/download/0.1.1-alpha/Impervious-macosx_amd64.zip
       - name: Build and Sign
@@ -92,7 +92,7 @@ jobs:
       - name: Yarn Install
         run: yarn
       - name: Get Daemon
-        run: wget -O ./src/extraResources/daemon/impervious.zip https://github.com/imperviousai/imp-daemon/releases/download/v1.0.5/impervious_1.0.5_linux_amd64.zip
+        run: wget -O ./src/extraResources/daemon/impervious.zip https://github.com/imperviousai/imp-daemon/releases/download/v1.1.0/impervious_1.1.0_linux_amd64.zip
       - name: Get Browser
         run: wget -O ./src/extraResources/browser/Impervious.zip https://github.com/imperviousai/imp-browser/releases/download/0.1.1-alpha/Impervious-linux_amd64.zip
       - name: Build
