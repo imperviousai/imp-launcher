@@ -1,17 +1,13 @@
-import { app, BrowserWindow } from "electron";
+import { app, BrowserWindow, Tray, Menu } from "electron";
 import fs from "fs";
-import { access, constants } from "node:fs";
+import { access, constants, accessSync } from "node:fs";
 import { ChildProcess, spawn } from "child_process";
 import extract from "extract-zip";
-import axios from "axios";
-import stream from "stream";
-import { promisify } from "util";
-import { createWindow } from "./main";
 import os from "os";
 import psList from "ps-list";
+import { rootPath as root } from 'electron-root-path';
+import path from 'path'
 
-
-const finished = promisify(stream.finished);
 import log from "electron-log";
 import { pids } from "./main"; // an array of pids that we want to kill when browser or electron closes
 
@@ -23,6 +19,26 @@ const homePath =
   os.platform() === "darwin"
     ? `/Users/${user}`
     : `/home/${user}`;
+// // const binDir =
+// //   os.platform() === "darwin"
+// //     ? homePath + "/Library/Application Support/Impervious/"
+// //     : homePath + "/Impervious/"
+// const impDir =
+//   os.platform() === "darwin"
+//   ? homePath + "/Library/Application Support/Impervious/.imp/"
+//   : homePath + "/.imp/"
+// // fs.mkdirSync(binDir, { recursive: true });
+// fs.mkdirSync(impDir, { recursive: true });
+
+// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+const electronDaemonPath = path.join(root, './daemon');
+// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+const electronBrowserPath = path.join(root, './browser');
+
+
+
+
+
 const binDir = homePath + "/Impervious/"
 const impDir = homePath + "/.imp/"
 fs.mkdirSync(binDir, { recursive: true });
@@ -34,45 +50,132 @@ const newDaemonPath = binDir + "daemon/";
 fs.mkdirSync(newBrowserPath, { recursive: true });
 fs.mkdirSync(newDaemonPath, { recursive: true });
 
-
-let daemonDownloadURL:string = "";
-let browserDownloadURL:string = "";
-let launcherDownloadURL:string = "";
+const versioningFile:string = impDir + "versioning.json";
 
 
 export const initDownloadInfo = async () => {
+
   try {
-  const latestDaemon = await axios.get('https://releases.impervious.live/imp-daemon');
-  const latestBrowser = await axios.get('https://releases.impervious.live/imp-browser');
-  const latestLauncher = await axios.get('https://releases.impervious.live/imp-launcher')
 
-  if (os.platform() === "darwin") {
-    if (os.arch() === "arm64") {
-      latestDaemon.data.assets.forEach((asset: any) => {if (asset.browser_download_url.match(/impervious.*?darwin.*?arm64\.zip$/g)) daemonDownloadURL = asset.browser_download_url});
-      latestBrowser.data.assets.forEach((asset: any) => {if (asset.browser_download_url.match(/Impervious\-macosx_arm64\.zip$/g)) browserDownloadURL = asset.browser_download_url});
-      latestLauncher.data.assets.forEach((asset: any) => {if (asset.browser_download_url.match(/Impervious.*?darwin.*?arm64.*?\.zip$/g)) launcherDownloadURL = asset.browser_download_url});
-    } else {
-      latestDaemon.data.assets.forEach((asset: any) => {if (asset.browser_download_url.match(/impervious.*?darwin.*?amd64\.zip$/g)) daemonDownloadURL = asset.browser_download_url});
-      latestBrowser.data.assets.forEach((asset: any) => {if (asset.browser_download_url.match(/Impervious\-macosx_amd64\.zip$/g)) browserDownloadURL = asset.browser_download_url});
-      latestLauncher.data.assets.forEach((asset: any) => {if (asset.browser_download_url.match(/Impervious.*?darwin.*?x64.*?\.zip$/g)) launcherDownloadURL = asset.browser_download_url});
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+  const tray:Tray = new Tray(path.join(root, 'whiteIcon16x16.png'));
+
+  const menu = Menu.buildFromTemplate([
+    {
+      label: 'Close the Impervious-Launcher',
+      click() { app. quit(); }
     }
+  ])
+
+  tray.setToolTip('Impervious Manager');
+  tray.setContextMenu(menu);
+
+  } catch (err) {
+    console.error("Error in tray creation", err.message);
   }
-  else if (os.platform() === "linux") {
-    if (os.arch() === "x64") {
-      latestDaemon.data.assets.forEach((asset: any) => {if (asset.browser_download_url.match(/impervious.*?linux.*?amd64\.zip$/g)) daemonDownloadURL = asset.browser_download_url});
-      latestBrowser.data.assets.forEach((asset: any) => {if (asset.browser_download_url.match(/Impervious\-linux_amd64\.zip$/g)) browserDownloadURL = asset.browser_download_url});
-      latestLauncher.data.assets.forEach((asset: any) => {if (asset.browser_download_url.match(/Impervious.*?linux.*?x64.*?\.zip$/g)) launcherDownloadURL = asset.browser_download_url});
+
+      if (await checkForUpdates()){ // if the current app.version isnt the same as the versioning file, clean up and re-extract
+        try {
+          // console.log("Attempting to unzip Resources");
+          // await extract(electronBrowserPath + "/Impervious.zip", {dir: electronBrowserPath});
+          // await extract(electronDaemonPath + "/impervious.zip", {dir: electronDaemonPath});
+          // console.log("Resources extracted");
+
+          console.log("Clean up directories")
+          fs.rmdirSync(newBrowserPath, { recursive: true });
+          fs.rmdirSync(newDaemonPath, { recursive: true });
+
+          console.log("Recreating empty dirs");
+          fs.mkdirSync(newBrowserPath, { recursive: true });
+          fs.mkdirSync(newDaemonPath, { recursive: true });
+
+          console.log("Attempting to unzip Resources");
+          await extract(electronBrowserPath + "/Impervious.zip", {dir: newBrowserPath});
+          await extract(electronDaemonPath + "/impervious.zip", {dir: newDaemonPath});
+          console.log("Resources extracted");
+
+      } catch (err) {
+        console.error("Error in extract block of initDownloads", err.message);
+      }
+      }
+}
+
+
+export const macUpdaterLogic = () => {
+  if (process.platform === "darwin"){
+    try {
+      if (!app.isInApplicationsFolder()){
+        app.moveToApplicationsFolder(); // ensure we arent a translocated app in r/o
+      }
+      if (app.isInApplicationsFolder()){
+
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      require('update-electron-app')({
+        repo: 'imperviousai/imp-launcher',
+        updateInterval: '1 hour',
+        logger: log
+       })
+      }
+    } catch (err){
+      console.error("Error in main when moving to /applications");
     }
+
+   }
+}
+
+
+export const checkForUpdates = async () => {
+  try {
+    accessSync(versioningFile, constants.R_OK)
+  } catch (err) {
+    console.error("No versioning.json found. Writing defaults.");
+    const versioningInfoDefaults = {
+      launcherVersion: "0.0.0"
+    }
+    fs.writeFileSync(versioningFile, JSON.stringify(versioningInfoDefaults, null, 2));
+    return true;
   }
-  else {
-    console.error("Unsupported OS or arch. Exiting");
-    process.exit();
-  }
+  try {
+    const versioningInfo = await JSON.parse(fs.readFileSync(versioningFile).toString());
+
+    if (versioningInfo.launcherVersion !== app.getVersion()){
+      versioningInfo.launcherVersion = app.getVersion()
+      fs.writeFileSync(versioningFile, JSON.stringify(versioningInfo, null, 2));
+      return true; // if versions are not the same, require further action
+    }
+    return false;
+
 } catch (err) {
-  console.error("Error in initDownloadInfo", err.message);
+  console.error("Error in checkForDaemonUpdate", err.message);
+}
 }
 
+
+
+
+export const writeVersionInformation = () => {
+
+  try {
+    accessSync(versioningFile, constants.R_OK)
+  } catch (err) {
+    console.error("No versioning.json found. Writing defaults.");
+    const versioningInfoDefaults = {
+      launcherVersion: "0.0.0"
+    }
+    fs.writeFileSync(versioningFile, JSON.stringify(versioningInfoDefaults, null, 2));
+  }
+
+  try {
+    const versioningInfo = JSON.parse(fs.readFileSync(versioningFile).toString());
+
+    versioningInfo.launcherVersion = app.getVersion()
+
+    fs.writeFileSync(versioningFile, JSON.stringify(versioningInfo, null, 2));
+  } catch (err) {
+    console.error("Error reading versioning file in writeVersionInformation");
+  }
 }
+
 
 const daemonRespawn = (imp:ChildProcess, filepath:string) => {
 
@@ -96,7 +199,8 @@ const daemonRespawn = (imp:ChildProcess, filepath:string) => {
     log.info("[INFO] The Daemon has shut off");
     log.info("Attempting to restart the daemon.");
     try {
-      daemonRespawn(spawn(filepath, {
+      daemonRespawn(spawn(filepath,
+        {
         cwd: newDaemonPath,
         shell: false,
     }), filepath);
@@ -108,14 +212,14 @@ const daemonRespawn = (imp:ChildProcess, filepath:string) => {
 
 
 export const spawnImpervious = () => {
-  console.log("Checking for daemon config file");
+  console.log("Checking for daemon binary file");
+  // const filepath = electronDaemonPath + "/impervious";
   const filepath = newDaemonPath + "impervious";
   access(filepath, constants.F_OK, async (err) => {
     if (err) {
       console.error("SpawnImpervious error: ", err.message);
       log.info(`STDERR: ${err.code as string}, REASON: ${err.message}`);
       log.info("[STDERR] The Daemon doesn't exists. Fetching it now ...");
-      if (BrowserWindow.getAllWindows().length === 0) createWindow();
       return;
     }
 
@@ -143,19 +247,9 @@ export const spawnImpervious = () => {
     //return;
   }
 
-
-      daemonRespawn(spawn(filepath, {  // this should ensure daemon always runs as long as electron is alive
-        cwd: newDaemonPath,
-        shell: false,
-    }), filepath);
-
-    if (alreadyRunning) { // if its already running, dont try to start it again
-      console.log("Daemon already running...");
-      //return;
-    }
-
     try {
-      daemonRespawn(spawn(filepath, {  // this should ensure daemon always runs as long as electron is alive
+      daemonRespawn(spawn(filepath,
+        {  // this should ensure daemon always runs as long as electron is alive
         cwd: newDaemonPath,
         shell: false,
     }), filepath);
@@ -167,9 +261,14 @@ export const spawnImpervious = () => {
 
 export const spawnBrowser = () => {
   const filepath =
+    // os.platform() === "darwin"
+    //   ? electronBrowserPath + "/Impervious.app"
+    //   : electronBrowserPath + "/Impervious";
+
     os.platform() === "darwin"
-      ? newBrowserPath + "Impervious.app"
-      : newBrowserPath + "Impervious";
+    ? newBrowserPath + "Impervious.app"
+    : newBrowserPath + "Impervious";
+
 
   try {
     access(filepath, constants.F_OK, (err) => {
@@ -177,7 +276,6 @@ export const spawnBrowser = () => {
         console.error("SpawnImpervious error: ", err.message);
         log.info(`STDERR: ${err.code as string}, REASON: ${err.message}`);
         log.info("[STDERR] The Daemon doesn't exists. Fetching it now ...");
-        if (BrowserWindow.getAllWindows().length === 0) createWindow();
         return;
       }
     const browserExecutable =
@@ -188,7 +286,7 @@ export const spawnBrowser = () => {
     try {
       const browser = spawn(browserExecutable, {
         cwd: filepath,
-        detached: true,
+        detached: false,
       });
       if (browser.pid) {
         pids.push(browser.pid);
@@ -219,60 +317,3 @@ export const spawnBrowser = () => {
   console.error("Error in access spawnBrowser");
 }
 };
-
-
-const download = async (downloadURL: string, outputPath: string) => {
-  const file = fs.createWriteStream(outputPath);
-  return await axios({
-    method: "get",
-    url: downloadURL,
-    responseType: "stream",
-  })
-    .then(async (response) => {
-      response.data.pipe(file);
-      file
-        .on("finish", () => {
-          log.info("File download completed.");
-        })
-        .on("close", () => {
-          log.info("File successfully closed");
-        })
-        .on("error", (err) => {
-          log.error("ERROR: ", err);
-        });
-      return await finished(file);
-    })
-    .catch((err) => {
-      log.info(err);
-    });
-};
-
-export const downloadDaemon = async (version: string) => {
-  try {
-    await download(daemonDownloadURL, newDaemonPath + "impervious.zip");
-    console.log("Daemon download completed...");
-  } catch (err) {
-    console.error("Daemon download failure... ", err.message);
-  }
-  try {
-    await extract(newDaemonPath + "impervious.zip", { dir: newDaemonPath });
-    console.log("Daemon extract completed...");
-  } catch (err) {
-    console.error("Daemon extraction failure... ", err.message);
-  }
-}
-
-export const downloadBrowser = async (version: string) => {
-  try {
-    await download(browserDownloadURL, newBrowserPath + "impervious-browser.zip")
-    console.log("Browser download completed...");
-  } catch (err) {
-    console.error("Browser download failure... ", err.message);
-  }
-  try {
-    await extract(newBrowserPath + "impervious-browser.zip", { dir: newBrowserPath });
-    console.log("Browser extract completed...");
-  } catch (err) {
-    console.error("Browser extraction failure... ", err.message);
-  }
-}

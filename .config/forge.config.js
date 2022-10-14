@@ -1,4 +1,5 @@
 const path = require("path");
+const { isWhiteSpaceLike } = require("typescript");
 const package = require("../package.json");
 require("dotenv").config();
 
@@ -7,7 +8,13 @@ const packageAssetsPath = path.join(__dirname, "..", "assets", "package");
 module.exports = {
   packagerConfig: {
     asar: false,
-    name: "Impervious",
+    name: "Impervious-Launcher",
+    extraResource: [
+      "./src/extraResources/daemon",
+      "./src/extraResources/browser",
+      "./assets/package/icons/png/whiteIcon16x16.png",
+      "./assets/package/icons/png/background500x700.png"
+    ],
     icon: path.join(packageAssetsPath, "icons", "mac", "icon.icns"),
     osxSign: {
       entitlements: "entitlements.plist",
@@ -51,16 +58,25 @@ module.exports = {
     //   },
     // },
     // You can only build the DMG target on macOS machines.
-    // {
-    //   name: "@electron-forge/maker-dmg",
-    //   config: {
-    //     // https://js.electronforge.io/maker/dmg/interfaces/makerdmgconfig
-    //     icon: path.join(packageAssetsPath, "icons", "mac", "icon.icns"),
-    //     background: path.join(packageAssetsPath, "source.png"),
-    //     overwrite: true,
-    //     name: "Impervious", // NEEDS TO BE SHORTER THAN 27 CHARACTERS
-    //   },
-    // },
+    {
+      name: "@electron-forge/maker-dmg",
+      config: {
+        // https://js.electronforge.io/maker/dmg/interfaces/makerdmgconfig
+        icon: path.join(packageAssetsPath, "icons", "mac", "icon.icns"),
+        background: path.join(packageAssetsPath, "icons", "png", "background500x700.png"),
+        "background-color": "#F0FFFF",
+        additionalDMGOptions:{
+          "window":{
+            "size": {
+              "width": 700,
+              "height": 500
+            }
+          },
+        },
+        overwrite: true,
+        // name: "Impervious-Launcher", // NEEDS TO BE SHORTER THAN 27 CHARACTERS
+      },
+    },
 
     // Use maker-zip to build for mac, but without customizability
     {
