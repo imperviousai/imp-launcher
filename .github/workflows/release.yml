@@ -5,8 +5,8 @@ on:
       - "master"
 
 jobs:
-  macosx:
-    name: Build, Sign, Release (macosx_arm64, macosx_amd64)
+  macosx_arm64:
+    name: Build, Sign, Release (macosx_arm64)
     runs-on: macos-latest
     steps:
       - name: Checkout
@@ -14,7 +14,7 @@ jobs:
       - name: Set Up Node
         uses: actions/setup-node@v3
         with:
-          node-version: 14
+          node-version: 16
       - name: Yarn Install
         run: yarn
       - name: Import Keychain Certs
@@ -26,13 +26,7 @@ jobs:
         run: yarn make:mac --arch=arm64
         env:
           AC_PASSWORD: ${{ secrets.AC_PASSWORD }}
-      - name: Build and Sign (macosx-amd64)
-        run: yarn make:mac
-        env:
-          AC_PASSWORD: ${{ secrets.AC_PASSWORD }}
-      - name: Build (linux-x64)
-        run: yarn make:linux --arch=x64
-      - name: "Release artifacts"
+      - name: "Release macosx_arm64 artifacts"
         uses: "marvinpinto/action-automatic-releases@latest"
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
@@ -40,5 +34,58 @@ jobs:
           title: "v0.4.0"
           files: |
             out/make/zip/darwin/arm64/*.zip
-            out/make/zip/darwin/x64/*.zip
+            out/make/*.dmg
+
+  macosx_amd64:
+    name: Build, Sign, Release (macosx_amd64)
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Set Up Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+      - name: Yarn Install
+        run: yarn
+      - name: Import Keychain Certs
+        uses: apple-actions/import-codesign-certs@v1
+        with:
+          p12-file-base64: ${{ secrets.CERTIFICATES_P12 }}
+          p12-password: ${{ secrets.CERTIFICATES_P12_PASSWORD }}
+      - name: Build and Sign (macosx-amd64)
+        run: yarn make:mac
+        env:
+          AC_PASSWORD: ${{ secrets.AC_PASSWORD }}
+      - name: "Release macosx_amd64 artifacts"
+        uses: "marvinpinto/action-automatic-releases@latest"
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: "v0.4.0"
+          title: "v0.4.0"
+          files: |
+            out/make/zip/darwin/amd64/*.zip
+            out/make/*.dmg
+
+  linux_amd64:
+    name: Build, Sign, Release (linux_amd64)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Set Up Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+      - name: Yarn Install
+        run: yarn
+      - name: Build (linux-x64)
+        run: yarn make:linux --arch=x64
+      - name: "Release linux artifacts"
+        uses: "marvinpinto/action-automatic-releases@latest"
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: "v0.4.0"
+          title: "v0.4.0"
+          files: |
             out/make/zip/linux/x64/*.zip

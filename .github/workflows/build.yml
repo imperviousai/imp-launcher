@@ -14,7 +14,7 @@ jobs:
       - name: Set Up Node
         uses: actions/setup-node@v3
         with:
-          node-version: 14
+          node-version: 16
       - name: Yarn Install
         run: yarn
       - name: Import Keychain Certs
@@ -30,11 +30,18 @@ jobs:
         run: yarn make:mac --arch=arm64
         env:
           AC_PASSWORD: ${{ secrets.AC_PASSWORD }}
-      - name: "Upload artifacts to Job"
+      - name: "Upload zip to Job"
         uses: actions/upload-artifact@v3
         with:
-          name: Impervious-macosx_arm64
+          name: Impervious-macosx_arm64_zip
           path: out/make/zip/darwin/arm64/*.zip
+      - name: "Upload dmg to Job"
+        uses: actions/upload-artifact@v3
+        with:
+          name: Impervious-macosx_arm64_dmg
+          path: out/make/*.dmg
+
+
   macosx_amd64:
     name: Build, Sign, Push Artifacts (macosx_amd64)
     runs-on: macos-latest
@@ -44,7 +51,7 @@ jobs:
       - name: Set Up Node
         uses: actions/setup-node@v3
         with:
-          node-version: 14
+          node-version: 16
       - name: Yarn Install
         run: yarn
       - name: Import Keychain Certs
@@ -60,11 +67,18 @@ jobs:
         run: yarn make:mac --arch=x64
         env:
           AC_PASSWORD: ${{ secrets.AC_PASSWORD }}
-      - name: "Upload artifacts to Job"
+      - name: "Upload zip to Job"
         uses: actions/upload-artifact@v3
         with:
-          name: Impervious-macosx_amd64
+          name: Impervious-macosx_amd64_zip
           path: out/make/zip/darwin/x64/*.zip
+      - name: "Upload dmg to Job"
+        uses: actions/upload-artifact@v3
+        with:
+          name: Impervious-macosx_amd64_dmg
+          path: out/make/*.dmg
+
+
   linux_amd64:
     name: Build, Sign, Push Artifacts (linux_amd64)
     runs-on: ubuntu-latest
@@ -74,7 +88,7 @@ jobs:
       - name: Set Up Node
         uses: actions/setup-node@v3
         with:
-          node-version: 14
+          node-version: 16
       - name: Yarn Install
         run: yarn
       - name: Get Daemon
@@ -86,5 +100,5 @@ jobs:
       - name: "Upload artifacts to Job"
         uses: actions/upload-artifact@v3
         with:
-          name: Impervious-linux_amd64
+          name: Impervious-linux_amd64_zip
           path: out/make/zip/linux/x64/*.zip
