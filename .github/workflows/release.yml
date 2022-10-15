@@ -5,8 +5,8 @@ on:
       - "master"
 
 jobs:
-  macosx_arm64:
-    name: Build, Sign, Release (macosx_arm64)
+  releaser:
+    name: Build, Sign, Release (macosx_arm64, macosx_amd64, linux_amd64)
     runs-on: macos-latest
     steps:
       - name: Checkout
@@ -22,15 +22,33 @@ jobs:
         with:
           p12-file-base64: ${{ secrets.CERTIFICATES_P12 }}
           p12-password: ${{ secrets.CERTIFICATES_P12_PASSWORD }}
-      - name: Get Daemon
+
+      - name: Get macosx-arm Daemon
         run: wget -O ./src/extraResources/daemon/impervious.zip https://github.com/imperviousai/imp-daemon/releases/download/v1.1.0/impervious_1.1.0_darwin_arm64.zip
-      - name: Get Browser
+      - name: Get macosx-arm Browser
         run: wget -O ./src/extraResources/browser/Impervious.zip https://github.com/imperviousai/imp-browser/releases/download/0.1.1-alpha/Impervious-macosx_arm64.zip
       - name: Build and Sign (macosx-arm64)
         run: yarn make:mac --arch=arm64
         env:
           AC_PASSWORD: ${{ secrets.AC_PASSWORD }}
-      - name: "Release macosx_arm64 artifacts"
+
+      - name: Get macosx-x64 Daemon
+        run: wget -O ./src/extraResources/daemon/impervious.zip https://github.com/imperviousai/imp-daemon/releases/download/v1.1.0/impervious_1.1.0_darwin_amd64.zip
+      - name: Get macosx-x64 Browser
+        run: wget -O ./src/extraResources/browser/Impervious.zip https://github.com/imperviousai/imp-browser/releases/download/0.1.1-alpha/Impervious-macosx_amd64.zip
+      - name: Build and Sign (macosx-amd64)
+        run: yarn make:mac
+        env:
+          AC_PASSWORD: ${{ secrets.AC_PASSWORD }}
+
+      - name: Get linux-x64 Daemon
+        run: wget -O ./src/extraResources/daemon/impervious.zip https://github.com/imperviousai/imp-daemon/releases/download/v1.1.0/impervious_1.1.0_linux_amd64.zip
+      - name: Get linux-x64 Browser
+        run: wget -O ./src/extraResources/browser/Impervious.zip https://github.com/imperviousai/imp-browser/releases/download/0.1.1-alpha/Impervious-linux_amd64.zip
+      - name: Build (linux-x64)
+        run: yarn make:linux --arch=x64
+
+      - name: "Release artifacts"
         uses: "marvinpinto/action-automatic-releases@latest"
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
@@ -38,66 +56,7 @@ jobs:
           title: "v0.4.0"
           files: |
             out/make/zip/darwin/arm64/*.zip
-            out/make/*.dmg
-
-  macosx_amd64:
-    name: Build, Sign, Release (macosx_amd64)
-    runs-on: macos-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Set Up Node
-        uses: actions/setup-node@v3
-        with:
-          node-version: 16
-      - name: Yarn Install
-        run: yarn
-      - name: Import Keychain Certs
-        uses: apple-actions/import-codesign-certs@v1
-        with:
-          p12-file-base64: ${{ secrets.CERTIFICATES_P12 }}
-          p12-password: ${{ secrets.CERTIFICATES_P12_PASSWORD }}
-      - name: Get Daemon
-        run: wget -O ./src/extraResources/daemon/impervious.zip https://github.com/imperviousai/imp-daemon/releases/download/v1.1.0/impervious_1.1.0_darwin_amd64.zip
-      - name: Get Browser
-        run: wget -O ./src/extraResources/browser/Impervious.zip https://github.com/imperviousai/imp-browser/releases/download/0.1.1-alpha/Impervious-macosx_amd64.zip
-      - name: Build and Sign (macosx-amd64)
-        run: yarn make:mac
-        env:
-          AC_PASSWORD: ${{ secrets.AC_PASSWORD }}
-      - name: "Release macosx_amd64 artifacts"
-        uses: "marvinpinto/action-automatic-releases@latest"
-        with:
-          repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          automatic_release_tag: "v0.4.0"
-          title: "v0.4.0"
-          files: |
-            out/make/zip/darwin/amd64/*.zip
-            out/make/*.dmg
-
-  linux_amd64:
-    name: Build, Sign, Release (linux_amd64)
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Set Up Node
-        uses: actions/setup-node@v3
-        with:
-          node-version: 16
-      - name: Yarn Install
-        run: yarn
-      - name: Get Daemon
-        run: wget -O ./src/extraResources/daemon/impervious.zip https://github.com/imperviousai/imp-daemon/releases/download/v1.1.0/impervious_1.1.0_linux_amd64.zip
-      - name: Get Browser
-        run: wget -O ./src/extraResources/browser/Impervious.zip https://github.com/imperviousai/imp-browser/releases/download/0.1.1-alpha/Impervious-linux_amd64.zip
-      - name: Build (linux-x64)
-        run: yarn make:linux --arch=x64
-      - name: "Release linux artifacts"
-        uses: "marvinpinto/action-automatic-releases@latest"
-        with:
-          repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          automatic_release_tag: "v0.4.0"
-          title: "v0.4.0"
-          files: |
+            out/make/*arm64.dmg
+            out/make/zip/darwin/x64/*.zip
+            out/make/*x64.dmg
             out/make/zip/linux/x64/*.zip
