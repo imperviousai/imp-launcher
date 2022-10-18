@@ -1,4 +1,4 @@
-import { app, BrowserWindow, Tray, Menu } from "electron";
+import { app, Tray, Menu } from "electron";
 import fs from "fs";
 import { access, constants, accessSync } from "node:fs";
 import { ChildProcess, spawn } from "child_process";
@@ -62,12 +62,12 @@ export const initDownloadInfo = async () => {
 
   const menu = Menu.buildFromTemplate([
     {
-      label: 'Close the Impervious-Launcher',
+      label: 'Close the Impervious Background Manager',
       click() { app. quit(); }
     }
   ])
 
-  tray.setToolTip('Impervious Manager');
+  tray.setToolTip('Impervious Background Manager');
   tray.setContextMenu(menu);
 
   } catch (err) {
@@ -119,7 +119,6 @@ export const macUpdaterLogic = () => {
     } catch (err){
       console.error("Error in main when moving to /applications");
     }
-
    }
 }
 
@@ -149,7 +148,7 @@ export const checkForUpdates = async () => {
   console.error("Error in checkForDaemonUpdate", err.message);
 }
 }
-
+}
 
 
 

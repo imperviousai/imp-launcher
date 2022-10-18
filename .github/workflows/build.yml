@@ -22,10 +22,10 @@ jobs:
         with:
           p12-file-base64: ${{ secrets.CERTIFICATES_P12 }}
           p12-password: ${{ secrets.CERTIFICATES_P12_PASSWORD }}
-      - name: Get Daemon
-        run: wget -O ./src/extraResources/daemon/impervious.zip https://github.com/imperviousai/imp-daemon/releases/download/v1.1.0/impervious_1.1.0_darwin_arm64.zip
-      - name: Get Browser
-        run: wget -O ./src/extraResources/browser/Impervious.zip https://github.com/imperviousai/imp-browser/releases/download/0.1.1-alpha/Impervious-macosx_arm64.zip
+      - name: Get macosx arm64 Daemon
+        run: wget -O ./src/extraResources/daemon/impervious.zip https://github.com/imperviousai/imp-daemon/releases/download/v1.1.1/impervious_1.1.1_darwin_arm64.zip
+      - name: Get macosx arm64 Browser
+        run: wget -O ./src/extraResources/browser/Impervious.zip https://github.com/imperviousai/imp-browser/releases/download/0.1.2-alpha/Impervious-macosx_arm64.zip
       - name: Build and Sign
         run: yarn make:mac --arch=arm64
         env:
@@ -59,10 +59,10 @@ jobs:
         with:
           p12-file-base64: ${{ secrets.CERTIFICATES_P12 }}
           p12-password: ${{ secrets.CERTIFICATES_P12_PASSWORD }}
-      - name: Get Daemon
-        run: wget -O ./src/extraResources/daemon/impervious.zip https://github.com/imperviousai/imp-daemon/releases/download/v1.1.0/impervious_1.1.0_darwin_amd64.zip
-      - name: Get Browser
-        run: wget -O ./src/extraResources/browser/Impervious.zip https://github.com/imperviousai/imp-browser/releases/download/0.1.1-alpha/Impervious-macosx_amd64.zip
+      - name: Get macosx x64 Daemon
+        run: wget -O ./src/extraResources/daemon/impervious.zip https://github.com/imperviousai/imp-daemon/releases/download/v1.1.1/impervious_1.1.1_darwin_amd64.zip
+      - name: Get macosx x64 Browser
+        run: wget -O ./src/extraResources/browser/Impervious.zip https://github.com/imperviousai/imp-browser/releases/download/0.1.2-alpha/Impervious-macosx_amd64.zip
       - name: Build and Sign
         run: yarn make:mac --arch=x64
         env:
@@ -91,10 +91,10 @@ jobs:
           node-version: 16
       - name: Yarn Install
         run: yarn
-      - name: Get Daemon
-        run: wget -O ./src/extraResources/daemon/impervious.zip https://github.com/imperviousai/imp-daemon/releases/download/v1.1.0/impervious_1.1.0_linux_amd64.zip
-      - name: Get Browser
-        run: wget -O ./src/extraResources/browser/Impervious.zip https://github.com/imperviousai/imp-browser/releases/download/0.1.1-alpha/Impervious-linux_amd64.zip
+      - name: Get linux x64 Daemon
+        run: wget -O ./src/extraResources/daemon/impervious.zip https://github.com/imperviousai/imp-daemon/releases/download/v1.1.1/impervious_1.1.1_linux_amd64.zip
+      - name: Get linux x64 Browser
+        run: wget -O ./src/extraResources/browser/Impervious.zip https://github.com/imperviousai/imp-browser/releases/download/0.1.2-alpha/Impervious-linux_amd64.zip
       - name: Build
         run: yarn make:linux --arch=x64
       - name: "Upload artifacts to Job"
