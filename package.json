@@ -1,7 +1,7 @@
 {
   "name": "impervious",
   "productName": "Impervious",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "description": "The Impervious Process Manager and Launcher",
   "main": ".webpack/main",
   "scripts": {

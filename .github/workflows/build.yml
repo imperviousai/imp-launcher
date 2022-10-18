@@ -23,7 +23,7 @@ jobs:
           p12-file-base64: ${{ secrets.CERTIFICATES_P12 }}
           p12-password: ${{ secrets.CERTIFICATES_P12_PASSWORD }}
       - name: Get macosx arm64 Daemon
-        run: wget -O ./src/extraResources/daemon/impervious.zip https://github.com/imperviousai/imp-daemon/releases/download/v1.1.2/impervious_1.1.2_darwin_arm64.zip
+        run: wget -O ./src/extraResources/daemon/impervious.zip https://github.com/imperviousai/imp-daemon/releases/download/v1.1.3/impervious_1.1.3_darwin_arm64.zip
       - name: Get macosx arm64 Browser
         run: wget -O ./src/extraResources/browser/Impervious.zip https://github.com/imperviousai/imp-browser/releases/download/0.1.2-alpha/Impervious-macosx_arm64.zip
       - name: Build and Sign
@@ -60,7 +60,7 @@ jobs:
           p12-file-base64: ${{ secrets.CERTIFICATES_P12 }}
           p12-password: ${{ secrets.CERTIFICATES_P12_PASSWORD }}
       - name: Get macosx x64 Daemon
-        run: wget -O ./src/extraResources/daemon/impervious.zip https://github.com/imperviousai/imp-daemon/releases/download/v1.1.2/impervious_1.1.2_darwin_amd64.zip
+        run: wget -O ./src/extraResources/daemon/impervious.zip https://github.com/imperviousai/imp-daemon/releases/download/v1.1.3/impervious_1.1.3_darwin_amd64.zip
       - name: Get macosx x64 Browser
         run: wget -O ./src/extraResources/browser/Impervious.zip https://github.com/imperviousai/imp-browser/releases/download/0.1.2-alpha/Impervious-macosx_amd64.zip
       - name: Build and Sign
@@ -92,7 +92,7 @@ jobs:
       - name: Yarn Install
         run: yarn
       - name: Get linux x64 Daemon
-        run: wget -O ./src/extraResources/daemon/impervious.zip https://github.com/imperviousai/imp-daemon/releases/download/v1.1.2/impervious_1.1.2_linux_amd64.zip
+        run: wget -O ./src/extraResources/daemon/impervious.zip https://github.com/imperviousai/imp-daemon/releases/download/v1.1.3/impervious_1.1.3_linux_amd64.zip
       - name: Get linux x64 Browser
         run: wget -O ./src/extraResources/browser/Impervious.zip https://github.com/imperviousai/imp-browser/releases/download/0.1.2-alpha/Impervious-linux_amd64.zip
       - name: Build
