@@ -6,7 +6,7 @@ import extract from "extract-zip";
 import os from "os";
 import psList from "ps-list";
 import { rootPath as root } from 'electron-root-path';
-import path from 'path'
+import path, { resolve } from 'path'
 
 import log from "electron-log";
 import { pids } from "./main"; // an array of pids that we want to kill when browser or electron closes
@@ -100,25 +100,32 @@ export const initDownloadInfo = async () => {
       }
 }
 
+export const macMoveToApplications = async () => {
+    return new Promise(() => {
+      try {
+          app.moveToApplicationsFolder(); // ensure we arent a translocated app in r/o
+          resolve() // resolve once this block completes
+      } catch (err){
+        console.error("Error in main when moving to /applications");
+      }
+    })
+}
 
 export const macUpdaterLogic = () => {
   if (process.platform === "darwin"){
     try {
-      if (!app.isInApplicationsFolder()){
-        app.moveToApplicationsFolder(); // ensure we arent a translocated app in r/o
-      }
-      if (app.isInApplicationsFolder()){
+        if (app.isInApplicationsFolder()){
 
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      require('update-electron-app')({
-        repo: 'imperviousai/imp-launcher',
-        updateInterval: '1 hour',
-        logger: log
-       })
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        require('update-electron-app')({
+          repo: 'imperviousai/imp-launcher',
+          updateInterval: '1 hour',
+          logger: log
+         })
+        }
+      } catch (err){
+        console.error("Error in macUpdaterLogic");
       }
-    } catch (err){
-      console.error("Error in main when moving to /applications");
-    }
    }
 }
 
