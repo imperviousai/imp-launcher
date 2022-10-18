@@ -8,13 +8,16 @@ const packageAssetsPath = path.join(__dirname, "..", "assets", "package");
 module.exports = {
   packagerConfig: {
     asar: false,
-    name: "Impervious-Launcher",
+    name: "Impervious",
     extraResource: [
       "./src/extraResources/daemon",
       "./src/extraResources/browser",
       "./assets/package/icons/png/whiteIcon16x16.png",
       "./assets/package/icons/png/background500x700.png"
     ],
+    "extendInfo": {
+      "LSUIElement": true,
+    },
     icon: path.join(packageAssetsPath, "icons", "mac", "icon.icns"),
     osxSign: {
       entitlements: "entitlements.plist",
