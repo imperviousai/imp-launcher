@@ -94,7 +94,7 @@ jobs:
       - name: Get Daemon
         run: wget -O ./src/extraResources/daemon/impervious.zip https://github.com/imperviousai/imp-daemon/releases/download/v1.1.1/impervious_1.1.1_linux_amd64.zip
       - name: Get Browser
-        run: wget -O ./src/extraResources/browser/Impervious.zip
+        run: wget -O ./src/extraResources/browser/Impervious.zip https://github.com/imperviousai/imp-browser/releases/download/0.1.2-alpha/Impervious-linux_amd64.zip
       - name: Build
         run: yarn make:linux --arch=x64
       - name: "Upload artifacts to Job"
