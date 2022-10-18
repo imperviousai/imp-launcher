@@ -1,6 +1,6 @@
 # imp-launcher
 
-> The parent application responsible for managing both the Impervious Browser and Impervious Daemon. Currently, the launcher is in ALPHA. It is not production ready yet. 
+> The parent application responsible for managing both the Impervious Browser and Impervious Daemon. Currently, the launcher is in ALPHA. It is not production ready yet.
 
 ---
 
@@ -35,7 +35,7 @@ $ tree -L 2 ~/Impervious
 
 Above, you can see both the browser and daemon have been downloaded locally. A default `config.yml` file will be located within `daemon/config/config.yml`. If these files exist locally, then you are good to go.
 
- **Note:** There may be a case where the screen will not progress to the final screen that reads "You're ready to rock and roll!". If this does not happen (give it 1-2 minutes first), you can (fully!) close the application and launch it again (Step 1.). To close the application, kill the process that you started in Step 1 and confirm that you see the files shown in the tree above.
+**Note:** There may be a case where the screen will not progress to the final screen that reads "You're ready to rock and roll!". If this does not happen (give it 1-2 minutes first), you can (fully!) close the application and launch it again (Step 1.). To close the application, kill the process that you started in Step 1 and confirm that you see the files shown in the tree above.
 
 If everything went well, clicking the `Close and Launch` button will fire up both the daemon and the browser at the same time.
 
@@ -43,34 +43,39 @@ Launching and closing the browser will also start or stop the background daemon 
 
 ## **Factory Reset Instructions**
 
-Since the application is rapidly developing, there may be several times where you may want to perform a "factory reset" and start over from scratch. The best way to do that is to follow the instructions below:
+> How to perform a "Factory Reset" on your Impervious Browser
 
-1. Stop the application if it is currently running. `Ctrl-C` in the existing Terminal session.
-2. Kill all or any existing Impervious processes.
-   - Open `Activity Monitor`
-   - Search for `Impervious`
-   - Kill all Impervious processes
-3. Be sure to have your initial recovery seed handy as this will delete the local database. Delete the `~/Impervious` folder completely.
+Maybe you want to delete all your data and start from scratch?
 
-```sh
+Maybe you need to recovery your Decentralized Identity ("DID") and are unable to log into the browser?
+
+Maybe the application crashed due to an unforeseen bug?
+
+Regardless of the reason, a "factory reset" - which also enables account recovery - involves deleting all local data and downloaded artifacts (i.e. saved contacts, message content, application data, etc.), allowing you to start from scratch while recovering your Decentralized Identity (DID).
+
+> In future updates, the Impervious Browser provide an action to quickly perform an automated factory reset, so the following steps will no longer be needed.
+
+In short, the following destinations contain artifacts that are necessary for core functionality, and removing these will allow the Browser to restart in a fresh state.
+
+- `~/.imp` - contains core data storage and configuration information
+- `~/Impervious` - contains downloaded artifacts that work together to make the Impervious Browser, the Browser itself and the embedded Impervious Daemon
+- `~/Library/Application\ Support/Impervious*` - **(Mac Only)** contains any additional configurations and storage regarding both the Impervious Installer and the Browser itself
+
+**Deleting these folders will reset the application.**
+
+In a terminal, you can run the following commands to delete these folders.
+
+> Be sure to close the application before running the following commands. Open "Activity Monitor" on Mac, search for "Impervious" and force close any listed items.
+
+```
+$ rm -rf ~/Library/Application\ Support/Impervious*
+$ rm -rf ~/.imp
 $ rm -rf ~/Impervious
 ```
 
-4. Start the application over from scratch. See Step 1 in `Launch the Application`.
-5. (Optionally) Remove the Impervious Browser profile data.
+After this, starting the Impervious Browser again will repeat the installation process, download fresh resources, and allow you to Get Started once again, or perform a Recovery with your Recovery Kit to recovery your decentralized identifier.
 
-```sh
-$ rm -rf ~/Library/Application\ Support/Impervious*
-```
-6. If upon browser launch you see an error message that says your firefox profile cannot be loaded, you may have some lingering files at the following locations or maybe you moved/deleted your firefox profile data. To remedy this, delete the following files:
-
-```sh
-$ rm -rf ~/Library/Application\ Support/Impervious\ Browser/Profiles/installs.ini
-```
-
-```sh
-$ rm -rf ~/Library/Application\ Support/Impervious\ Browser/Profiles/profiles.ini
-```
+That's all there is to it! :)
 
 ## **Soft Reset Instructions**
 
@@ -85,7 +90,7 @@ $ rm -rf ~/Impervious/daemon/.imp/
 
 ## **Development Instructions**
 
-The application is an Electron application, using [Electron Forge](https://www.electronforge.io/) for managing the application. It's definitely overkill, but we aim to no longer need a launcher application and just serve the browser along side the daemon. 
+The application is an Electron application, using [Electron Forge](https://www.electronforge.io/) for managing the application. It's definitely overkill, but we aim to no longer need a launcher application and just serve the browser along side the daemon.
 
 ### **Installation**
 
@@ -115,7 +120,7 @@ To build apps into a local executable, run one of the following commands to buil
 # yarn make:linux
 ```
 
-This will produce executables in the `out/` folder. 
+This will produce executables in the `out/` folder.
 
 ```sh
 $ yarn make:mac
@@ -159,7 +164,7 @@ out
 
 You can personalize the forge **maker** configs at `/.config/forge.config.js`. See [Electron Forge configuration docs](https://www.electronforge.io/configuration) for more information.
 
-See `package.json` for additional build and package options. 
+See `package.json` for additional build and package options.
 
 ---
 

@@ -148,7 +148,7 @@ export const checkForUpdates = async () => {
   console.error("Error in checkForDaemonUpdate", err.message);
 }
 }
-
+}
 
 
 
