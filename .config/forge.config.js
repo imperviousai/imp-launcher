@@ -38,7 +38,7 @@ module.exports = {
       config: {
         repository: {
           owner: "imperviousai",
-          name: "imp-launcher",
+          name: "imp-launcher-staging",
           authToken: process.env.GITHUB_TOKEN,
         },
         draft: true,

@@ -118,7 +118,7 @@ export const macUpdaterLogic = () => {
 
         // eslint-disable-next-line @typescript-eslint/no-var-requires
         require('update-electron-app')({
-          repo: 'imperviousai/imp-launcher',
+          repo: 'imperviousai/imp-launcher-staging',
           updateInterval: '1 hour',
           logger: log
          })
@@ -198,11 +198,6 @@ const daemonRespawn = (imp:ChildProcess, filepath:string) => {
     log.info(`[STDOUT] ${data.toString()}`);
     if (data.toString().includes("bind: address already in use")){
       dialog.showErrorBox("Error In Daemon Spawn: Port Already In Use", "It appears the config file that was used references a port that is already in use. Impervious requires TCP ports 8881, 8882, 8883, and 8888.")
-      app.quit()
-      return
-    }
-    if (data.toString().includes("\"level\":\"error\"") && !data.toString().includes("Server closed")){
-      dialog.showErrorBox("Error In Daemon Spawn", data.toString())
       app.quit()
       return
     }
