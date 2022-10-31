@@ -104,7 +104,7 @@ export const macUpdaterLogic = () => {
 
         // eslint-disable-next-line @typescript-eslint/no-var-requires
         require('update-electron-app')({
-          repo: 'imperviousai/imp-launcher-staging',
+          repo: 'imperviousai/imp-launcher',
           updateInterval: '1 hour',
           logger: log
          })
