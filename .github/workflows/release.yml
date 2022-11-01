@@ -11,7 +11,7 @@ jobs:
   releaser:
     name: Build, Sign, Release (macosx_arm64, macosx_amd64, linux_amd64)
     runs-on: macos-latest
-    environment: staging
+    environment: production
     steps:
       - name: Checkout
         uses: actions/checkout@v2
