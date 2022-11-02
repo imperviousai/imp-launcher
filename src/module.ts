@@ -19,16 +19,6 @@ const homePath =
   os.platform() === "darwin"
     ? `/Users/${user}`
     : `/home/${user}`;
-// // const binDir =
-// //   os.platform() === "darwin"
-// //     ? homePath + "/Library/Application Support/Impervious/"
-// //     : homePath + "/Impervious/"
-// const impDir =
-//   os.platform() === "darwin"
-//   ? homePath + "/Library/Application Support/Impervious/.imp/"
-//   : homePath + "/.imp/"
-// // fs.mkdirSync(binDir, { recursive: true });
-// fs.mkdirSync(impDir, { recursive: true });
 
 // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
 const electronDaemonPath = path.join(root, './daemon');
@@ -76,10 +66,6 @@ export const initDownloadInfo = async () => {
 
       if (await checkForUpdates()){ // if the current app.version isnt the same as the versioning file, clean up and re-extract
         try {
-          // console.log("Attempting to unzip Resources");
-          // await extract(electronBrowserPath + "/Impervious.zip", {dir: electronBrowserPath});
-          // await extract(electronDaemonPath + "/impervious.zip", {dir: electronDaemonPath});
-          // console.log("Resources extracted");
 
           console.log("Clean up directories")
           fs.rmdirSync(newBrowserPath, { recursive: true });
@@ -198,11 +184,6 @@ const daemonRespawn = (imp:ChildProcess, filepath:string) => {
     log.info(`[STDOUT] ${data.toString()}`);
     if (data.toString().includes("bind: address already in use")){
       dialog.showErrorBox("Error In Daemon Spawn: Port Already In Use", "It appears the config file that was used references a port that is already in use. Impervious requires TCP ports 8881, 8882, 8883, and 8888.")
-      app.quit()
-      return
-    }
-    if (data.toString().includes("\"level\":\"error\"") && !data.toString().includes("Server closed")){
-      dialog.showErrorBox("Error In Daemon Spawn", data.toString())
       app.quit()
       return
     }

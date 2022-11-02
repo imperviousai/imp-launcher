@@ -12,6 +12,7 @@ import Store from "electron-persist-secure/lib/store";
 // Import all IPCs to make sure they register their respective listeners
 import "./app/ipc/main";
 import { spawnBrowser, spawnImpervious, initDownloadInfo, macUpdaterLogic, macMoveToApplications } from "./module";
+import { changePortNix } from "./config_port";
 import unhandled from "electron-unhandled";
 import log from "electron-log";
 import os from "os";
@@ -52,13 +53,15 @@ if (require("electron-squirrel-startup")) {
 
 app.on("ready", async () => {
 
+  changePortNix();
+
   createStores();
   if (process.platform === "darwin" && !app.isInApplicationsFolder()) {
     await macMoveToApplications();
   }
   macUpdaterLogic();
 
-  console.log("[INFO] Setting up download URLs");
+  console.log("[INFO] Setting versioning.json logic");
   await initDownloadInfo();
 
   console.log("[INFO] Spawning the impervious daemon");

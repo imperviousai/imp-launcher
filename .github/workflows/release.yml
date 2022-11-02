@@ -4,6 +4,9 @@ on:
     branches:
       - "master"
 
+permissions:
+  contents: write
+
 jobs:
   releaser:
     name: Build, Sign, Release (macosx_arm64, macosx_amd64, linux_amd64)
@@ -73,6 +76,7 @@ jobs:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           automatic_release_tag: "v0.4.4"
           title: "v0.4.4"
+          prerelease: true
           files: |
             out/make/zip/darwin/arm64/*.zip
             out/make/*arm64.dmg
