@@ -93,3 +93,5 @@ out/
 
 .vscode/
 .vscode/*
+src/extraResources/browser/Impervious.zip
+src/extraResources/daemon/impervious.zip

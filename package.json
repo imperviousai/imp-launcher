@@ -4,6 +4,7 @@
   "version": "0.4.4",
   "description": "The Impervious Process Manager and Launcher",
   "main": ".webpack/main",
+  "icon": "./assets/package/icons/mac/icon.ico",
   "scripts": {
     "debug": "electron-forge start --vscode",
     "start": "electron-forge start",
@@ -24,8 +25,8 @@
   },
   "keywords": [],
   "author": {
-    "name": "daniel",
-    "email": "saucesteals@gmail.com"
+    "name": "Impervious",
+    "email": "support@impervious.ai"
   },
   "license": "MIT",
   "config": {
