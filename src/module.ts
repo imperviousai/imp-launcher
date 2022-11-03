@@ -1,7 +1,7 @@
 import { app, Tray, Menu, dialog } from "electron";
 import fs from "fs";
 import { access, constants, accessSync } from "node:fs";
-import { ChildProcess, spawn } from "child_process";
+import { ChildProcess, spawn, spawnSync } from "child_process";
 import extract from "extract-zip";
 import os, { homedir } from "os";
 import psList from "ps-list";
@@ -11,14 +11,6 @@ import path, { resolve } from 'path'
 import log from "electron-log";
 import { pids } from "./main"; // an array of pids that we want to kill when browser or electron closes
 
-
-
-// const user = os.userInfo().username;
-
-// const homePath =
-//   os.platform() === "darwin"
-//     ? `/Users/${user}`
-//     : `/home/${user}`;
 
 // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
 const electronDaemonPath = path.join(root, 'daemon');
@@ -37,12 +29,6 @@ fs.mkdirSync(binDir, { recursive: true });
 fs.mkdirSync(impDir, { recursive: true });
 
 const versioningFile:string = path.join(impDir, "versioning.json");
-
-// const binDir = homePath + "/Impervious/"
-// const impDir = homePath + "/.imp/"
-// const newBrowserPath = binDir + "browser/";
-// const newDaemonPath = binDir + "daemon/";
-// const versioningFile:string = impDir + "versioning.json";
 
 
 export const initDownloadInfo = async () => {
@@ -78,14 +64,41 @@ export const initDownloadInfo = async () => {
           fs.mkdirSync(newDaemonPath, { recursive: true });
 
           console.log("Attempting to unzip Resources");
-          await extract(path.join(electronBrowserPath, "Impervious.zip") , {dir: newBrowserPath});
-          await extract(path.join(electronDaemonPath, "impervious.zip") , {dir: newDaemonPath});
-          console.log("Resources extracted");
+
+          if (process.platform === "darwin"){ // cause we are special
+            dittoExtract(path.join(electronBrowserPath, "Impervious.zip"), newBrowserPath);
+            dittoExtract(path.join(electronDaemonPath, "impervious.zip"), newDaemonPath);
+          } else {
+            await extract(path.join(electronBrowserPath, "Impervious.zip") , {dir: newBrowserPath});
+            await extract(path.join(electronDaemonPath, "impervious.zip") , {dir: newDaemonPath});
+            console.log("Resources extracted");
+          }
 
       } catch (err) {
         console.error("Error in extract block of initDownloads", err.message);
       }
       }
+}
+
+const dittoExtract = (sourceZip:string, outDir:string) => {
+  try {
+    const ditto = spawnSync(
+      "ditto",
+      ["-x", "-k", sourceZip, outDir],
+      {
+        cwd: binDir
+      }
+      );
+    if (ditto.error){
+      console.error(ditto.error);
+      dialog.showErrorBox("Error in Ditto Extraction", "There was an error while trying to extract resources via ditto.");
+      app.quit();
+      return;
+    }
+  } catch (err) {
+    console.error(err);
+  }
+
 }
 
 export const macMoveToApplications = async () => {
@@ -213,7 +226,7 @@ export const spawnImpervious = () => {
   console.log("Checking for daemon binary file");
   // const filepath = electronDaemonPath + "/impervious";
   //const filepath = newDaemonPath + "impervious";
-  const filepath = 
+  const filepath =
     process.platform !== "win32"
     ? path.join(newDaemonPath, "impervious")
     : path.join(newDaemonPath, "impervious.exe")
@@ -275,9 +288,9 @@ export const spawnBrowser = () => {
 
   let browserExecutable:string;
 
-  const filepath = 
+  const filepath =
     process.platform === "darwin"
-    ? path.join(newBrowserPath, "Impervious.app") 
+    ? path.join(newBrowserPath, "Impervious.app")
     : path.join(newBrowserPath, "Impervious");
 
 
