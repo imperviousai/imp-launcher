@@ -52,7 +52,7 @@ module.exports = {
       name: "@electron-forge/maker-squirrel",
       config: {
         // https://js.electronforge.io/maker/squirrel/interfaces/makersquirrelconfig
-        setupExe: "Impervious Setup.exe",
+        // setupExe: "Impervious_Setup.exe",
         iconUrl: path.join(packageAssetsPath, "icons", "win", "icon.ico"),
         setupIcon: path.join(packageAssetsPath, "icons", "win", "icon.ico"),
         authors: "Impervious",
