@@ -285,8 +285,8 @@ jobs:
 
       - name: "LS Post Release Folder and SHA256"
         run: "cd $GITHUB_WORKSPACE/releases && ls -la && for x in $(ls | grep -v 'exe'); do sha256sum $x >> $GITHUB_WORKSPACE/releases/SHA256-Checksums.txt; done;"
-      - name: SHA256 for windows (Pregenerated space in name messes up in command above)
-        run: cd $GITHUB_WORKSPACE/releases && sha256sum *.exe >> $GITHUB_WORKSPACE/releases/SHA256-Checksums.txt
+      # - name: SHA256 for windows (Pregenerated space in name messes up in command above)
+        # run: cd $GITHUB_WORKSPACE/releases && sha256sum *.exe >> $GITHUB_WORKSPACE/releases/SHA256-Checksums.txt
 
       - name: Release Artifacts
         uses: marvinpinto/action-automatic-releases@latest
