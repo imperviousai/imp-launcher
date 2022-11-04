@@ -1,9 +1,9 @@
 import { app, Tray, Menu, dialog } from "electron";
 import fs from "fs";
 import { access, constants, accessSync } from "node:fs";
-import { ChildProcess, spawn } from "child_process";
+import { ChildProcess, spawn, spawnSync } from "child_process";
 import extract from "extract-zip";
-import os from "os";
+import os, { homedir } from "os";
 import psList from "ps-list";
 import { rootPath as root } from 'electron-root-path';
 import path, { resolve } from 'path'
@@ -12,35 +12,23 @@ import log from "electron-log";
 import { pids } from "./main"; // an array of pids that we want to kill when browser or electron closes
 
 
-
-const user = os.userInfo().username;
-
-const homePath =
-  os.platform() === "darwin"
-    ? `/Users/${user}`
-    : `/home/${user}`;
-
 // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-const electronDaemonPath = path.join(root, './daemon');
+const electronDaemonPath = path.join(root, 'daemon');
 // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-const electronBrowserPath = path.join(root, './browser');
+const electronBrowserPath = path.join(root, 'browser');
 
+const binDir = path.join(homedir(), "Impervious")
+const impDir = path.join(homedir(), ".imp")
 
-
-
-
-const binDir = homePath + "/Impervious/"
-const impDir = homePath + "/.imp/"
-fs.mkdirSync(binDir, { recursive: true });
-fs.mkdirSync(impDir, { recursive: true });
-
-const newBrowserPath = binDir + "browser/";
-const newDaemonPath = binDir + "daemon/";
+const newBrowserPath = path.join(binDir, "browser")
+const newDaemonPath = path.join(binDir, "daemon")
 
 fs.mkdirSync(newBrowserPath, { recursive: true });
 fs.mkdirSync(newDaemonPath, { recursive: true });
+fs.mkdirSync(binDir, { recursive: true });
+fs.mkdirSync(impDir, { recursive: true });
 
-const versioningFile:string = impDir + "versioning.json";
+const versioningFile:string = path.join(impDir, "versioning.json");
 
 
 export const initDownloadInfo = async () => {
@@ -76,14 +64,41 @@ export const initDownloadInfo = async () => {
           fs.mkdirSync(newDaemonPath, { recursive: true });
 
           console.log("Attempting to unzip Resources");
-          await extract(electronBrowserPath + "/Impervious.zip", {dir: newBrowserPath});
-          await extract(electronDaemonPath + "/impervious.zip", {dir: newDaemonPath});
-          console.log("Resources extracted");
+
+          if (process.platform === "darwin"){ // cause we are special
+            dittoExtract(path.join(electronBrowserPath, "Impervious.zip"), newBrowserPath);
+            dittoExtract(path.join(electronDaemonPath, "impervious.zip"), newDaemonPath);
+          } else {
+            await extract(path.join(electronBrowserPath, "Impervious.zip") , {dir: newBrowserPath});
+            await extract(path.join(electronDaemonPath, "impervious.zip") , {dir: newDaemonPath});
+            console.log("Resources extracted");
+          }
 
       } catch (err) {
         console.error("Error in extract block of initDownloads", err.message);
       }
       }
+}
+
+const dittoExtract = (sourceZip:string, outDir:string) => {
+  try {
+    const ditto = spawnSync(
+      "ditto",
+      ["-x", "-k", sourceZip, outDir],
+      {
+        cwd: binDir
+      }
+      );
+    if (ditto.error){
+      console.error(ditto.error);
+      dialog.showErrorBox("Error in Ditto Extraction", "There was an error while trying to extract resources via ditto.");
+      app.quit();
+      return;
+    }
+  } catch (err) {
+    console.error(err);
+  }
+
 }
 
 export const macMoveToApplications = async () => {
@@ -210,7 +225,11 @@ const daemonRespawn = (imp:ChildProcess, filepath:string) => {
 export const spawnImpervious = () => {
   console.log("Checking for daemon binary file");
   // const filepath = electronDaemonPath + "/impervious";
-  const filepath = newDaemonPath + "impervious";
+  //const filepath = newDaemonPath + "impervious";
+  const filepath =
+    process.platform !== "win32"
+    ? path.join(newDaemonPath, "impervious")
+    : path.join(newDaemonPath, "impervious.exe")
   access(filepath, constants.F_OK, async (err) => {
     if (err) {
       console.error("SpawnImpervious error: ", err.message);
@@ -226,13 +245,23 @@ export const spawnImpervious = () => {
 
       for (const proc of runningProcesses) {
 
-        if (os.platform() === "darwin" || os.platform() === "linux"){
+        if (process.platform !== "win32"){
           if (proc.cmd?.includes("daemon/impervious")) {
             console.log("Found running match: ", proc.cmd)
             alreadyRunning = true;
             process.kill(proc.pid); // kill any previous daemons in process list
           }
+        } else {
+          if (proc.name?.includes("impervious.exe")) {
+            console.log("Found running match: ", proc.name)
+            alreadyRunning = true;
+            process.kill(proc.pid); // kill any previous daemons in process list
+          }
         }
+      }
+      if (process.platform === "win32" && alreadyRunning){
+        app.relaunch();
+        app.quit();
       }
     } catch (err) {
       console.error("Error in pre-existing daemon check", err.message);
@@ -256,14 +285,13 @@ export const spawnImpervious = () => {
 };
 
 export const spawnBrowser = () => {
-  const filepath =
-    // os.platform() === "darwin"
-    //   ? electronBrowserPath + "/Impervious.app"
-    //   : electronBrowserPath + "/Impervious";
 
-    os.platform() === "darwin"
-    ? newBrowserPath + "Impervious.app"
-    : newBrowserPath + "Impervious";
+  let browserExecutable:string;
+
+  const filepath =
+    process.platform === "darwin"
+    ? path.join(newBrowserPath, "Impervious.app")
+    : path.join(newBrowserPath, "Impervious");
 
 
   try {
@@ -274,10 +302,24 @@ export const spawnBrowser = () => {
         log.info("[STDERR] The Daemon doesn't exists. Fetching it now ...");
         return;
       }
-    const browserExecutable =
-      os.platform() === "darwin"
-        ? `${filepath}/Contents/MacOS/Impervious`
-        : `${filepath}/Impervious`;
+    // const browserExecutable =
+    //   os.platform() === "darwin"
+    //     ? `${filepath}/Contents/MacOS/Impervious`
+    //     : `${filepath}/Impervious`;
+
+
+
+        switch(process.platform){
+          case "darwin":
+            browserExecutable = path.join(filepath, "Contents", "MacOS", "Impervious");
+            break;
+          case "linux":
+            browserExecutable = path.join(filepath, "Impervious");
+            break;
+          case "win32":
+            browserExecutable = path.join(filepath, "Impervious.exe"); // default to windows for now
+            break;
+        }
 
     try {
       const browser = spawn(browserExecutable, {

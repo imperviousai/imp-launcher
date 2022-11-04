@@ -18,7 +18,7 @@ module.exports = {
     "extendInfo": {
       "LSUIElement": true,
     },
-    icon: path.join(packageAssetsPath, "icons", "mac", "icon.icns"),
+    icon: path.join(packageAssetsPath, "icons", "mac", "icon"),
     osxSign: {
       entitlements: "entitlements.plist",
       "entitlements-inherit": "entitlements.plist",
@@ -48,18 +48,17 @@ module.exports = {
   makers: [
     // https://www.electronforge.io/config/makers
 
-    // {
-    //   name: "@electron-forge/maker-squirrel",
-    //   config: {
-    //     // https://js.electronforge.io/maker/squirrel/interfaces/makersquirrelconfig
-    //     setupExe: "Windows Setup.exe",
-    //     iconUrl:
-    //       "https://raw.githubusercontent.com/saucesteals/electron-typescript-react-tailwind-redux/main/assets/package/icons/win/icon.ico",
-    //     setupIcon: path.join(packageAssetsPath, "icons", "win", "icon.ico"),
-    //     authors: "saucesteals & fourwadu",
-    //     loadingGif: path.join(packageAssetsPath, "loading.gif"),
-    //   },
-    // },
+    {
+      name: "@electron-forge/maker-squirrel",
+      config: {
+        // https://js.electronforge.io/maker/squirrel/interfaces/makersquirrelconfig
+        setupExe: "Impervious Setup.exe",
+        iconUrl: path.join(packageAssetsPath, "icons", "win", "icon.ico"),
+        setupIcon: path.join(packageAssetsPath, "icons", "win", "icon.ico"),
+        authors: "Impervious",
+        loadingGif: path.join(packageAssetsPath, "icons", "png", "background500x700.png"),
+      },
+    },
     // You can only build the DMG target on macOS machines.
     {
       name: "@electron-forge/maker-dmg",
