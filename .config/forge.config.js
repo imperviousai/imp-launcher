@@ -52,7 +52,7 @@ module.exports = {
       name: "@electron-forge/maker-squirrel",
       config: {
         // https://js.electronforge.io/maker/squirrel/interfaces/makersquirrelconfig
-        // setupExe: "Impervious_Setup.exe",
+        setupExe: "Impervious Setup.exe",
         iconUrl: path.join(packageAssetsPath, "icons", "win", "icon.ico"),
         setupIcon: path.join(packageAssetsPath, "icons", "win", "icon.ico"),
         authors: "Impervious",
@@ -87,13 +87,19 @@ module.exports = {
       // No config choice
     },
 
-    // {
-    //   name: "@electron-forge/maker-deb",
-    //   config: {
-    //     // https://js.electronforge.io/maker/deb/interfaces/makerdebconfig
-    //     icon: path.join(packageAssetsPath, "icons", "png", "1024x1024.png"),
-    //   },
-    // },
+    {
+      name: "@electron-forge/maker-deb",
+      platforms: ["linux"],
+      config: {
+        // https://js.electronforge.io/maker/deb/interfaces/makerdebconfig
+        icon: path.join(packageAssetsPath, "icons", "png", "1024x1024.png"),
+        bin: "Impervious",
+        genericName: "Impervious Launcher",
+        productName: "Impervious Launcher",
+        homepage: "https://www.impervious.ai",
+        maintainer: "Impervious Technologies Inc",
+      },
+    },
   ],
   plugins: [
     [
