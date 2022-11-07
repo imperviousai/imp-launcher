@@ -200,6 +200,12 @@ jobs:
           name: Impervious_gpg
           path: out/make/zip/linux/x64/*.gpg
 
+      - name: "Upload DEB to Job"
+        uses: actions/upload-artifact@v3
+        with:
+          name: Impervious-linux_amd64_deb
+          path: out/make/deb/x64/*.deb
+
 
   # win_amd64:
   #   name: Building (win_amd64)
@@ -304,3 +310,4 @@ jobs:
             **/releases/*.txt
             **/releases/*.sig
             **/releases/*.gpg
+            **/releases/*.deb
