@@ -52,11 +52,12 @@ module.exports = {
       name: "@electron-forge/maker-squirrel",
       config: {
         // https://js.electronforge.io/maker/squirrel/interfaces/makersquirrelconfig
-        setupExe: "Impervious Setup.exe",
+        // setupExe: "Impervious Setup.exe",
         iconUrl: path.join(packageAssetsPath, "icons", "win", "icon.ico"),
         setupIcon: path.join(packageAssetsPath, "icons", "win", "icon.ico"),
         authors: "Impervious",
         loadingGif: path.join(packageAssetsPath, "icons", "png", "background500x700.png"),
+        signWithParams: "/fd sha256 /tr http://ts.ssl.com /td sha256 /sha1 d03d7db46cb3042a46eac48ececfb3d59f83e242"
       },
     },
     // You can only build the DMG target on macOS machines.

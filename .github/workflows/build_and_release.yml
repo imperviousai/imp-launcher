@@ -182,6 +182,25 @@ jobs:
           GPG_PUBLIC_KEY: ${{ secrets.GPG_PUBLIC_KEY }}
         run: echo $GPG_PUBLIC_KEY >> Impervious.gpg
 
+      - name: Install aptly
+        run: sudo apt install aptly -y
+      - name: Get aptly config
+        env:
+          APTLY_CONFIG: ${{ secrets.APTLY_CONFIG }}
+        run: echo $APTLY_CONFIG | base64 --decode > $HOME/.aptly.conf
+      - name: Create aptly repo
+        run: aptly repo create -distribution=stable -component=main impervious-release
+      - name: Add deb to repo
+        run: aptly repo add impervious-release out/make/deb/x64/
+      - name: Snapshot DEB and repo
+        run: aptly snapshot create impervious-latest from repo impervious-release
+      - name: Deploy to s3
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: 'aptly publish snapshot impervious-latest s3:repo.impervious.live:'
+
+
       - name: "Upload zip to Job"
         uses: actions/upload-artifact@v3
         with:
@@ -207,71 +226,71 @@ jobs:
           path: out/make/deb/x64/*.deb
 
 
-  # win_amd64:
-  #   name: Building (win_amd64)
-  #   runs-on: windows-latest
-  #   steps:
-  #     - name: Checkout
-  #       uses: actions/checkout@v2
-  #     - name: Set Up Node
-  #       uses: actions/setup-node@v3
-  #       with:
-  #         node-version: 16
-  #     - name: Set up windows specifics
-  #       run: "npm config set msvs_version 2015"
-  #     - name: Set up more windows specifics
-  #       run: "npm install --global --production windows-build-tools@4.0.0"
-  #     - name: "Increase yarn timeout"
-  #       run: "yarn config set network-timeout 300000"
-  #     - name: Yarn Install
-  #       run: yarn
+  win_amd64:
+    name: Building (win_amd64)
+    runs-on: self-hosted
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Set Up Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+      - name: Set up windows specifics
+        run: "npm config set msvs_version 2015"
+      - name: Set up more windows specifics
+        run: "npm install --global --production windows-build-tools@4.0.0"
+      - name: "Increase yarn timeout"
+        run: "yarn config set network-timeout 300000"
+      - name: Yarn Install
+        run: yarn
 
 
-  #     - name: Download Daemon Assets
-  #       uses: robinraju/release-downloader@v1.6
-  #       with:
-  #         repository: "imperviousai/imp-daemon-staging"
-  #         latest: true
-  #         fileName: '*.zip'
-  #         out-file-path:  "daemonDownloads"
-  #         token:  ${{ secrets.DOWNLOADPAT }}
-  #     - name: Download Browser Assets
-  #       uses: robinraju/release-downloader@v1.6
-  #       with:
-  #         repository: "imperviousai/imp-browser-staging"
-  #         latest: true
-  #         fileName: '*.zip'
-  #         out-file-path:  "browserDownloads"
-  #         token:  ${{ secrets.DOWNLOADPAT }}
+      - name: Download Daemon Assets
+        uses: robinraju/release-downloader@v1.6
+        with:
+          repository: "imperviousai/imp-daemon-staging"
+          latest: true
+          fileName: '*.zip'
+          out-file-path:  "daemonDownloads"
+          token:  ${{ secrets.DOWNLOADPAT }}
+      - name: Download Browser Assets
+        uses: robinraju/release-downloader@v1.6
+        with:
+          repository: "imperviousai/imp-browser-staging"
+          latest: true
+          fileName: '*.zip'
+          out-file-path:  "browserDownloads"
+          token:  ${{ secrets.DOWNLOADPAT }}
 
 
 
-  #     - name: Get win (linux) x64 Daemon
-  #       run: cp ./daemonDownloads/impervious*_linux_amd64.zip ./src/extraResources/daemon/impervious.zip
-  #     - name: Get win (linux) x64 Browser
-  #       run: cp ./browserDownloads/Impervious-linux_amd64.zip ./src/extraResources/browser/Impervious.zip
-  #     - name: Build (win-x64)
-  #       run: yarn make:win --arch=x64
-  #     - name: "Upload exe artifacts to Job"
-  #       uses: actions/upload-artifact@v3
-  #       with:
-  #         name: Impervious-win32(lin)_amd64_exe
-  #         path: out\make\squirrel.windows\x64\*.exe
-  #     - name: "Upload nupkg artifacts to Job"
-  #       uses: actions/upload-artifact@v3
-  #       with:
-  #         name: Impervious-win32(lin)_amd64_nupkg
-  #         path: out\make\squirrel.windows\x64\*.nupkg
-  #     - name: "Upload RELEASES artifacts to Job"
-  #       uses: actions/upload-artifact@v3
-  #       with:
-  #         name: win32-RELEASES
-  #         path: out\make\squirrel.windows\x64\RELEASES
+      - name: Get win x64 Daemon
+        run: cp ./daemonDownloads/impervious*_windows_amd64.zip ./src/extraResources/daemon/impervious.zip
+      - name: Get win x64 Browser
+        run: cp ./browserDownloads/Impervious-windows_amd64.zip ./src/extraResources/browser/Impervious.zip
+      - name: Build (win-x64)
+        run: yarn make:win --arch=x64
+      - name: "Upload exe artifacts to Job"
+        uses: actions/upload-artifact@v3
+        with:
+          name: Impervious-win32_amd64_exe
+          path: out\make\squirrel.windows\x64\*.exe
+      - name: "Upload nupkg artifacts to Job"
+        uses: actions/upload-artifact@v3
+        with:
+          name: Impervious-win32_amd64_nupkg
+          path: out\make\squirrel.windows\x64\*.nupkg
+      - name: "Upload RELEASES artifacts to Job"
+        uses: actions/upload-artifact@v3
+        with:
+          name: win32-RELEASES
+          path: out\make\squirrel.windows\x64\RELEASES
 
 
   release_artifacts:
     name: Preparing Release
-    needs: [macosx_arm64, macosx_amd64, linux_amd64] #, win_amd64]
+    needs: [macosx_arm64, macosx_amd64, linux_amd64, win_amd64]
     runs-on: ubuntu-latest
     steps:
       - name: "Download Artifacts"
@@ -291,8 +310,8 @@ jobs:
 
       - name: "LS Post Release Folder and SHA256"
         run: "cd $GITHUB_WORKSPACE/releases && ls -la && for x in $(ls | grep -v 'exe'); do sha256sum $x >> $GITHUB_WORKSPACE/releases/SHA256-Checksums.txt; done;"
-      # - name: SHA256 for windows (Pregenerated space in name messes up in command above)
-        # run: cd $GITHUB_WORKSPACE/releases && sha256sum *.exe >> $GITHUB_WORKSPACE/releases/SHA256-Checksums.txt
+      - name: SHA256 for windows (Pregenerated space in name messes up in command above)
+        run: cd $GITHUB_WORKSPACE/releases && sha256sum *.exe >> $GITHUB_WORKSPACE/releases/SHA256-Checksums.txt
 
       - name: Release Artifacts
         uses: marvinpinto/action-automatic-releases@latest
