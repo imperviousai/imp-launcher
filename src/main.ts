@@ -11,7 +11,7 @@ import { app } from "electron";
 import Store from "electron-persist-secure/lib/store";
 // Import all IPCs to make sure they register their respective listeners
 import "./app/ipc/main";
-import { spawnBrowser, spawnImpervious, initDownloadInfo, macUpdaterLogic, macMoveToApplications } from "./module";
+import { spawnBrowser, spawnImpervious, initDownloadInfo, macUpdaterLogic, macMoveToApplications, winUpdaterLogic } from "./module";
 import { changePortNix } from "./config_port";
 import unhandled from "electron-unhandled";
 import log from "electron-log";
@@ -60,6 +60,7 @@ app.on("ready", async () => {
     await macMoveToApplications();
   }
   macUpdaterLogic();
+  winUpdaterLogic();
 
   console.log("[INFO] Setting versioning.json logic");
   await initDownloadInfo();

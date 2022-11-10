@@ -130,6 +130,21 @@ export const macUpdaterLogic = () => {
    }
 }
 
+export const winUpdaterLogic = () => {
+  if (process.platform === "win32"){
+    try {
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        require('update-electron-app')({
+          repo: 'imperviousai/imp-launcher',
+          updateInterval: '1 hour',
+          logger: log
+         })
+      } catch (err){
+        console.error("Error in winUpdaterLogic");
+      }
+   }
+}
+
 
 export const checkForUpdates = async () => {
   try {
