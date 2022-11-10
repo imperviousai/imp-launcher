@@ -182,23 +182,27 @@ jobs:
           GPG_PUBLIC_KEY: ${{ secrets.GPG_PUBLIC_KEY }}
         run: echo $GPG_PUBLIC_KEY >> Impervious.gpg
 
-      - name: Install aptly
-        run: sudo apt install aptly -y
-      - name: Get aptly config
-        env:
-          APTLY_CONFIG: ${{ secrets.APTLY_CONFIG }}
-        run: echo $APTLY_CONFIG | base64 --decode > $HOME/.aptly.conf
-      - name: Create aptly repo
-        run: aptly repo create -distribution=stable -component=main impervious-release
-      - name: Add deb to repo
-        run: aptly repo add impervious-release out/make/deb/x64/
-      - name: Snapshot DEB and repo
-        run: aptly snapshot create impervious-latest from repo impervious-release
-      - name: Deploy to s3
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        run: 'aptly publish snapshot impervious-latest s3:repo.impervious.live:'
+      # - name: Install aptly
+      #   run: sudo apt install aptly -y
+      # - name: Get aptly config
+      #   env:
+      #     APTLY_CONFIG: ${{ secrets.APTLY_CONFIG }}
+      #   run: echo $APTLY_CONFIG | base64 --decode > $HOME/.aptly.conf
+      # - name: Create aptly repo
+      #   working-directory: $HOME
+      #   run: aptly repo create -distribution=stable -component=main impervious-release
+      # - name: Add deb to repo
+      #   working-directory: $HOME
+      #   run: aptly repo add impervious-release out/make/deb/x64/
+      # - name: Snapshot DEB and repo
+      #   working-directory: $HOME
+      #   run: aptly snapshot create impervious-latest from repo impervious-release
+      # - name: Deploy to s3
+      #   working-directory: $HOME
+      #   env:
+      #     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      #     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      #   run: 'aptly publish snapshot impervious-latest s3:repo.impervious.live:'
 
 
       - name: "Upload zip to Job"
