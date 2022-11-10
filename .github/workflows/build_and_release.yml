@@ -236,10 +236,10 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 16
-      - name: Set up windows specifics
-        run: "npm config set msvs_version 2015"
-      - name: Set up more windows specifics
-        run: "npm install --global --production windows-build-tools@4.0.0"
+      # - name: Set up windows specifics
+      #   run: "npm config set msvs_version 2015"
+      # - name: Set up more windows specifics
+      #   run: "npm install --global --production windows-build-tools@4.0.0"
       - name: "Increase yarn timeout"
         run: "yarn config set network-timeout 300000"
       - name: Yarn Install
