@@ -266,18 +266,18 @@ export const spawnImpervious = () => {
             alreadyRunning = true;
             process.kill(proc.pid); // kill any previous daemons in process list
           }
-        } else {
-          if (proc.name?.includes("impervious.exe")) {
-            console.log("Found running match: ", proc.name)
-            alreadyRunning = true;
-            process.kill(proc.pid); // kill any previous daemons in process list
-          }
+        // } else {
+        //   if (proc.name?.includes("impervious.exe")) {
+        //     console.log("Found running match: ", proc.name)
+        //     alreadyRunning = true;
+        //     process.kill(proc.pid); // kill any previous daemons in process list
+        //   }
         }
       }
-      if (process.platform === "win32" && alreadyRunning){
-        app.relaunch();
-        app.quit();
-      }
+      // if (process.platform === "win32" && alreadyRunning){
+      //   app.relaunch();
+      //   app.quit();
+      // }
     } catch (err) {
       console.error("Error in pre-existing daemon check", err.message);
     }
