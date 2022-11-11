@@ -28,18 +28,18 @@ if (require("electron-squirrel-startup")) {
   app.quit();
 }
 
- // Make sure to call this ONCE.
- const createStores = (): void => {
-   new Store({
-     configName: "config", // The stores name
-   });
- };
+// Make sure to call this ONCE.
+const createStores = (): void => {
+  new Store({
+    configName: "config", // The stores name
+  });
+};
 
-  const gotTheLock = app.requestSingleInstanceLock()
+const gotTheLock = app.requestSingleInstanceLock()
 
-  if (!gotTheLock) {
-    app.quit()
-  }
+if (!gotTheLock) {
+  app.quit()
+}
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
@@ -86,14 +86,19 @@ export const pids: Array<number> = []; // holds pids of daemon and browser windo
 app.on("before-quit", async () => {
   // when browser closes, it will fire close(). this will kill daemon and ensure daemon always dies when electron or firefox goes away
   console.info("Pids in list: ", pids);
-    pids.forEach((pid) => {
-      try {
-       process.kill(pid);
-      } catch (error) {
-        console.error("Error in PID deletion: ", error.message);
-      }
-     });
-     await windowsBrowserKiller() // not sure if this will fire, but here just in case
+  pids.forEach((pid) => {
+    try {
+      process.kill(pid);
+    } catch (error) {
+      console.error("Error in PID deletion: ", error.message);
+    }
+  });
+  try {
+    await windowsBrowserKiller() // not sure if this will fire, but here just in case
+  } catch (err) {
+    console.error(err);
+  }
+
 });
 
 app.on("activate", () => {
