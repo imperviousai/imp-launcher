@@ -8,9 +8,10 @@ import psList from "ps-list";
 import { rootPath as root } from 'electron-root-path';
 import path, { resolve } from 'path'
 
+
 import log from "electron-log";
 import { pids } from "./main"; // an array of pids that we want to kill when browser or electron closes
-
+// export const pids: Array<number> = [];
 
 // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
 const electronDaemonPath = path.join(root, 'daemon');
@@ -34,6 +35,7 @@ const versioningFile:string = path.join(impDir, "versioning.json");
 export const initDownloadInfo = async () => {
 
   try {
+    await windowsBrowserKiller(); // always try to kill any left over browsers on windows
 
   // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
   const tray:Tray = new Tray(path.join(root, 'whiteIcon16x16.png'));
@@ -41,7 +43,10 @@ export const initDownloadInfo = async () => {
   const menu = Menu.buildFromTemplate([
     {
       label: 'Close the Impervious Background Manager',
-      click() { app. quit(); }
+      async click() { 
+        await windowsBrowserKiller();
+        app.quit(); 
+      }
     }
   ])
 
@@ -52,32 +57,40 @@ export const initDownloadInfo = async () => {
     console.error("Error in tray creation", err.message);
   }
 
-      if (await checkForUpdates()){ // if the current app.version isnt the same as the versioning file, clean up and re-extract
-        try {
-
-          console.log("Clean up directories")
-          fs.rmdirSync(newBrowserPath, { recursive: true });
-          fs.rmdirSync(newDaemonPath, { recursive: true });
-
-          console.log("Recreating empty dirs");
-          fs.mkdirSync(newBrowserPath, { recursive: true });
-          fs.mkdirSync(newDaemonPath, { recursive: true });
-
-          console.log("Attempting to unzip Resources");
-
-          if (process.platform === "darwin"){ // cause we are special
-            dittoExtract(path.join(electronBrowserPath, "Impervious.zip"), newBrowserPath);
-            dittoExtract(path.join(electronDaemonPath, "impervious.zip"), newDaemonPath);
-          } else {
-            await extract(path.join(electronBrowserPath, "Impervious.zip") , {dir: newBrowserPath});
-            await extract(path.join(electronDaemonPath, "impervious.zip") , {dir: newDaemonPath});
-            console.log("Resources extracted");
-          }
-
-      } catch (err) {
-        console.error("Error in extract block of initDownloads", err.message);
+      if (await checkForUpdates() && process.platform !== "win32"){ // if the current app.version isnt the same as the versioning file, clean up and re-extract
+        await removeAndExtract();
+      } else if (process.platform === "win32") {         // explicit check
+        // the update logic doesnt work well for windows because electron opens and closes multiple times during launch
+        // causing the versioning.json file to update and skip the removeAndExtract()
+          await removeAndExtract();
       }
-      }
+}
+
+const removeAndExtract = async () => {
+  try {
+
+    console.log("Clean up directories")
+    fs.rmdirSync(newBrowserPath, { recursive: true });
+    fs.rmdirSync(newDaemonPath, { recursive: true });
+
+    console.log("Recreating empty dirs");
+    fs.mkdirSync(newBrowserPath, { recursive: true });
+    fs.mkdirSync(newDaemonPath, { recursive: true });
+
+    console.log("Attempting to unzip Resources");
+
+    if (process.platform === "darwin"){ // cause we are special
+      dittoExtract(path.join(electronBrowserPath, "Impervious.zip"), newBrowserPath);
+      dittoExtract(path.join(electronDaemonPath, "impervious.zip"), newDaemonPath);
+    } else {
+      await extract(path.join(electronBrowserPath, "Impervious.zip") , {dir: newBrowserPath});
+      await extract(path.join(electronDaemonPath, "impervious.zip") , {dir: newDaemonPath});
+      console.log("Resources extracted");
+    }
+
+} catch (err) {
+  console.error("Error in extract block of initDownloads", err.message);
+}
 }
 
 const dittoExtract = (sourceZip:string, outDir:string) => {
@@ -266,12 +279,12 @@ export const spawnImpervious = () => {
             alreadyRunning = true;
             process.kill(proc.pid); // kill any previous daemons in process list
           }
-        // } else {
-        //   if (proc.name?.includes("impervious.exe")) {
-        //     console.log("Found running match: ", proc.name)
-        //     alreadyRunning = true;
-        //     process.kill(proc.pid); // kill any previous daemons in process list
-        //   }
+        } else {
+          if (proc.name?.includes("impervious.exe")) {
+            console.log("Found running match: ", proc.name)
+            alreadyRunning = true;
+            process.kill(proc.pid); // kill any previous daemons in process list
+          }
         }
       }
       // if (process.platform === "win32" && alreadyRunning){
@@ -317,12 +330,6 @@ export const spawnBrowser = () => {
         log.info("[STDERR] The Daemon doesn't exists. Fetching it now ...");
         return;
       }
-    // const browserExecutable =
-    //   os.platform() === "darwin"
-    //     ? `${filepath}/Contents/MacOS/Impervious`
-    //     : `${filepath}/Impervious`;
-
-
 
         switch(process.platform){
           case "darwin":
@@ -332,35 +339,35 @@ export const spawnBrowser = () => {
             browserExecutable = path.join(filepath, "Impervious");
             break;
           case "win32":
-            browserExecutable = path.join(filepath, "Impervious.exe"); // default to windows for now
+            browserExecutable = path.join(filepath, "ImperviousBrowser.exe"); // default to windows for now
             break;
         }
 
     try {
-      const browser = spawn(browserExecutable, {
-        cwd: filepath,
-        detached: false,
-      });
-      if (browser.pid) {
-        pids.push(browser.pid);
-      } else {
-        console.log("Failed to spawn browser and push pid");
-      }
+        const browser = spawn(browserExecutable, {
+          cwd: filepath,
+          detached: false,
+        });
 
+        if (browser.pid) {
+          pids.push(browser.pid);
+        } else {
+          console.log("Failed to spawn browser and push pid");
+        }
 
-      app.focus();
+        app.focus();
 
-      browser.stdout.on("data", (data: string) => {
-        log.info(`[STDOUT] ${data.toString()}`);
-      });
-      browser.stderr.on("data", (data: string) => {
-        log.error(`[STDERR] ${data.toString()}`);
-      });
-      browser.on("close", () => {
-        log.info("[INFO] The browser has shut off");
-        log.info("Killing the Daemon and Electron App");
-        app.quit(); // close electron when browser closes
-      });
+        browser.stdout.on("data", (data: string) => {
+          log.info(`[STDOUT] ${data.toString()}`);
+        });
+        browser.stderr.on("data", (data: string) => {
+          log.error(`[STDERR] ${data.toString()}`);
+        });
+        browser.on("close", () => {
+          log.info("[INFO] The browser has shut off");
+          log.info("Killing the Daemon and Electron App");
+          app.quit(); // close electron when browser closes
+        });
     }
     catch (err) {
       console.error("");
@@ -370,3 +377,20 @@ export const spawnBrowser = () => {
   console.error("Error in access spawnBrowser");
 }
 };
+
+export const windowsBrowserKiller = async () => {
+  if (process.platform === "win32") {
+    const runningProcesses = await psList();
+
+    for (const proc of runningProcesses) {
+     try {
+       if (proc.name?.includes("ImperviousBrowser")) {
+         console.log("Found running match: ", proc.name)
+         process.kill(proc.pid);
+       }
+     } catch (error) {
+       console.error("Error in deleting browser pids")
+     }
+}
+  }
+}

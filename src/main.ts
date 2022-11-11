@@ -11,7 +11,7 @@ import { app } from "electron";
 import Store from "electron-persist-secure/lib/store";
 // Import all IPCs to make sure they register their respective listeners
 import "./app/ipc/main";
-import { spawnBrowser, spawnImpervious, initDownloadInfo, macUpdaterLogic, macMoveToApplications, winUpdaterLogic } from "./module";
+import { spawnBrowser, spawnImpervious, initDownloadInfo, macUpdaterLogic, macMoveToApplications, winUpdaterLogic, windowsBrowserKiller } from "./module";
 import { changePortNix } from "./config_port";
 import unhandled from "electron-unhandled";
 import log from "electron-log";
@@ -27,12 +27,6 @@ if (require("electron-squirrel-startup")) {
   // eslint-disable-line global-require
   app.quit();
 }
-
- // Handle creating/removing shortcuts on Windows when installing/uninstalling.
- if (require("electron-squirrel-startup")) {
-   // eslint-disable-line global-require
-   app.quit();
- }
 
  // Make sure to call this ONCE.
  const createStores = (): void => {
@@ -53,7 +47,10 @@ if (require("electron-squirrel-startup")) {
 
 app.on("ready", async () => {
 
-  changePortNix();
+  if (process.platform !== "win32") { // old linux/macs may have been on port 8080 before
+    changePortNix();
+  }
+
 
   createStores();
   if (process.platform === "darwin" && !app.isInApplicationsFolder()) {
@@ -78,23 +75,25 @@ app.on("ready", async () => {
 // for applications and their menu bar to stay active until the user quits
 // explicitly with Cmd + Q.
 app.on("window-all-closed", () => {
-  if (process.platform !== "darwin" && process.platform !== "linux") { // also, we dont want electron to die on linux either as it triggers 'before-quit' section below where all pids are killed. May not want this for windows in the future either..
-    app.quit();
-  }
+  console.log("Running as background manager. No windows open. Not quitting")
+  // if (process.platform !== "darwin" && process.platform !== "linux") { // also, we dont want electron to die on linux either as it triggers 'before-quit' section below where all pids are killed. May not want this for windows in the future either..
+  //   app.quit();
+  // }
 });
 
 export const pids: Array<number> = []; // holds pids of daemon and browser window so we can kill them later
 
-app.on("before-quit", () => {
+app.on("before-quit", async () => {
   // when browser closes, it will fire close(). this will kill daemon and ensure daemon always dies when electron or firefox goes away
-    console.info("Pids in list: ", pids);
+  console.info("Pids in list: ", pids);
     pids.forEach((pid) => {
-     try {
-      process.kill(pid);
-     } catch (error) {
-       console.error("Error in PID deletion: ", error.message);
-     }
-    });
+      try {
+       process.kill(pid);
+      } catch (error) {
+        console.error("Error in PID deletion: ", error.message);
+      }
+     });
+     await windowsBrowserKiller() // not sure if this will fire, but here just in case
 });
 
 app.on("activate", () => {
