@@ -57,13 +57,15 @@ export const initDownloadInfo = async () => {
     console.error("Error in tray creation", err.message);
   }
 
-  if (await checkForUpdates() && process.platform !== "win32") { // if the current app.version isnt the same as the versioning file, clean up and re-extract
-    await removeAndExtract();
-  } else if (process.platform === "win32") {         // explicit check
-    // the update logic doesnt work well for windows because electron opens and closes multiple times during launch
-    // causing the versioning.json file to update and skip the removeAndExtract()
-    await removeAndExtract();
-  }
+  await removeAndExtract();
+
+  // if (await checkForUpdates() && process.platform !== "win32") { // if the current app.version isnt the same as the versioning file, clean up and re-extract
+  //   await removeAndExtract();
+  // } else if (process.platform === "win32") {         // explicit check
+  //   // the update logic doesnt work well for windows because electron opens and closes multiple times during launch
+  //   // causing the versioning.json file to update and skip the removeAndExtract()
+  //   await removeAndExtract();
+  // }
 }
 
 const removeAndExtract = async () => {
