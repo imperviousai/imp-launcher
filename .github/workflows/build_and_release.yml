@@ -4,7 +4,6 @@ on:
     branches:
       - "master"
 
-
 jobs:
   macosx_arm64:
     name: Building (macosx_arm64)
