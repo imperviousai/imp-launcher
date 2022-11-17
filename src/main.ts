@@ -95,13 +95,13 @@ app.on("before-quit", () => {
   });
 });
 
-app.on("will-quit", () => {
-  try {
-    windowsBrowserKiller() // not sure if this will fire, but here just in case
-  } catch (err) {
-    console.error(err);
-  }
-});
+// app.on("will-quit", () => {
+//   try {
+//     windowsBrowserKiller() // not sure if this will fire, but here just in case
+//   } catch (err) {
+//     console.error(err);
+//   }
+// });
 
 app.on("activate", () => {
   // On OS X it's common to re-create a window in the app when the

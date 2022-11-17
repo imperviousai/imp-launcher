@@ -53,7 +53,8 @@ module.exports = {
       config: {
         // https://js.electronforge.io/maker/squirrel/interfaces/makersquirrelconfig
         // setupExe: "Impervious Setup.exe",
-        iconUrl: path.join(packageAssetsPath, "icons", "win", "icon.ico"),
+        // iconUrl: path.join(packageAssetsPath, "icons", "win", "icon.ico"),
+        iconUrl: "https://github.com/imperviousai/imp-browser/blob/master/brands/impervious/branding/firefox.ico",
         setupIcon: path.join(packageAssetsPath, "icons", "win", "icon.ico"),
         authors: "Impervious",
         loadingGif: path.join(packageAssetsPath, "icons", "png", "background500x700.png"),
