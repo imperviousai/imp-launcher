@@ -2,7 +2,7 @@ name: Build, Sign, Push Artifacts
 on:
   push:
     branches:
-      - "master"
+      - master
 
 jobs:
   macosx_arm64:
