@@ -93,12 +93,14 @@ app.on("before-quit", () => {
       console.error("Error in PID deletion: ", error.message);
     }
   });
+});
+
+app.on("will-quit", () => {
   try {
     windowsBrowserKiller() // not sure if this will fire, but here just in case
   } catch (err) {
     console.error(err);
   }
-
 });
 
 app.on("activate", () => {
