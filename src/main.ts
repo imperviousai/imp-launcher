@@ -84,6 +84,7 @@ app.on("window-all-closed", () => {
 export const pids: Array<number> = []; // holds pids of daemon and browser window so we can kill them later
 
 app.on("before-quit", () => {
+  if (process.platform !== "win32") {
   // when browser closes, it will fire close(). this will kill daemon and ensure daemon always dies when electron or firefox goes away
   console.info("Pids in list: ", pids);
   pids.forEach((pid) => {
@@ -93,6 +94,7 @@ app.on("before-quit", () => {
       console.error("Error in PID deletion: ", error.message);
     }
   });
+  }
 });
 
 // app.on("will-quit", () => {
