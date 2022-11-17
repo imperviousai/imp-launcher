@@ -272,23 +272,23 @@ export const spawnImpervious = () => {
     let alreadyRunning = false;
 
     try {
-      const runningProcesses = await psList();
+      if (process.platform !== "win32") {
+          const runningProcesses = await psList();
 
-      for (const proc of runningProcesses) {
-
-        if (process.platform !== "win32") {
+        for (const proc of runningProcesses) {
           if (proc.cmd?.includes("daemon/impervious")) {
             console.log("Found running match: ", proc.cmd)
             alreadyRunning = true;
             process.kill(proc.pid); // kill any previous daemons in process list
           }
-        } else {
-          if (proc.name?.includes("impervious.exe")) {
-            console.log("Found running match: ", proc.name)
-            alreadyRunning = true;
-            process.kill(proc.pid); // kill any previous daemons in process list
-          }
         }
+        } else {
+          // if (proc.name?.includes("impervious.exe")) {
+          //   console.log("Found running match: ", proc.name)
+          //   alreadyRunning = true;
+          //   process.kill(proc.pid); // kill any previous daemons in process list
+          // }
+          taskkillSync()
       }
       // if (process.platform === "win32" && alreadyRunning){
       //   app.relaunch();
