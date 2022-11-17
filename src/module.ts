@@ -35,7 +35,7 @@ const versioningFile: string = path.join(impDir, "versioning.json");
 export const initDownloadInfo = async () => {
 
   try {
-    await windowsBrowserKiller(); // always try to kill any left over browsers on windows
+    windowsBrowserKiller(); // always try to kill any left over browsers on windows
 
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     const tray: Tray = new Tray(path.join(root, 'whiteIcon16x16.png'));
@@ -43,8 +43,8 @@ export const initDownloadInfo = async () => {
     const menu = Menu.buildFromTemplate([
       {
         label: 'Close the Impervious Background Manager',
-        async click() {
-          await windowsBrowserKiller();
+        click() {
+          windowsBrowserKiller();
           app.quit();
         }
       }
@@ -380,21 +380,22 @@ export const spawnBrowser = () => {
   }
 };
 
-export const windowsBrowserKiller = async () => {
+export const windowsBrowserKiller = () => {
   try {
     if (process.platform === "win32") {
-      const runningProcesses = await psList();
+      // const runningProcesses = await psList();
 
-      for (const proc of runningProcesses) {
-        try {
-          if (proc.name?.includes("ImperviousBrowser")) {
-            console.log("Found running match: ", proc.name)
-            process.kill(proc.pid);
-          }
-        } catch (error) {
-          console.error("Error in deleting browser pids")
-        }
-      }
+      // for (const proc of runningProcesses) {
+      //   try {
+      //     if (proc.name?.includes("ImperviousBrowser")) {
+      //       console.log("Found running match: ", proc.name)
+      //       process.kill(proc.pid);
+      //     }
+      //   } catch (error) {
+      //     console.error("Error in deleting browser pids")
+      //   }
+      // }
+      spawnSync("taskkill", ["/IM", "ImperviousBrowser.exe", "/F"])
     }
   } catch (err) {
     console.error(err);
