@@ -36,7 +36,7 @@ const versioningFile: string = path.join(impDir, "versioning.json");
 export const initDownloadInfo = async () => {
 
   try {
-    windowsBrowserKiller(); // always try to kill any left over browsers on windows
+    // windowsBrowserKiller(); // always try to kill any left over browsers on windows
 
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     const tray: Tray = new Tray(path.join(root, 'whiteIcon16x16.png'));
