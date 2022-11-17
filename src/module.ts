@@ -7,6 +7,7 @@ import os, { homedir } from "os";
 import psList from "ps-list";
 import { rootPath as root } from 'electron-root-path';
 import path, { resolve } from 'path'
+import { taskkillSync } from 'taskkill';
 
 
 import log from "electron-log";
@@ -395,7 +396,11 @@ export const windowsBrowserKiller = () => {
       //     console.error("Error in deleting browser pids")
       //   }
       // }
-      spawnSync("taskkill", ["/IM", "ImperviousBrowser.exe", "/F"])
+      // spawnSync("taskkill", ["/IM", "ImperviousBrowser.exe", "/F"])
+      taskkillSync("ImperviousBrowser.exe", {
+        force: true,
+        tree: true
+      })
     }
   } catch (err) {
     console.error(err);
