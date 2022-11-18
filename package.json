@@ -1,7 +1,7 @@
 {
   "name": "impervious",
   "productName": "Impervious",
-  "version": "0.4.5",
+  "version": "0.4.7",
   "description": "The Impervious Process Manager and Launcher",
   "main": ".webpack/main",
   "icon": "./assets/package/icons/mac/icon.ico",
@@ -123,6 +123,7 @@
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.4.2",
     "tar": "^6.1.11",
+    "taskkill": "^5.0.0",
     "update-electron-app": "^2.0.1",
     "yaml": "^2.1.3"
   }

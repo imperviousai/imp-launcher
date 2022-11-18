@@ -1,0 +1,337 @@
+name: Build, Sign, Push Artifacts
+on:
+  push:
+    branches:
+      - master
+
+
+jobs:
+  macosx_arm64:
+    name: Building (macosx_arm64)
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Set Up Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+      - name: Yarn Install
+        run: yarn
+      - name: Import Keychain Certs
+        uses: apple-actions/import-codesign-certs@v1
+        with:
+          p12-file-base64: ${{ secrets.CERTIFICATES_P12 }}
+          p12-password: ${{ secrets.CERTIFICATES_P12_PASSWORD }}
+
+
+      - name: Download Daemon Assets
+        uses: robinraju/release-downloader@v1.6
+        with:
+          repository: "imperviousai/imp-daemon-staging"
+          latest: true
+          fileName: '*.zip'
+          out-file-path:  "daemonDownloads"
+          token:  ${{ secrets.DOWNLOADPAT }}
+      - name: Download Browser Assets
+        uses: robinraju/release-downloader@v1.6
+        with:
+          repository: "imperviousai/imp-browser-staging"
+          latest: true
+          fileName: '*.zip'
+          out-file-path:  "browserDownloads"
+          token:  ${{ secrets.DOWNLOADPAT }}
+
+
+      - name: Get macosx arm64 Daemon
+        # run: wget -O ./src/extraResources/daemon/impervious.zip https://github.com/imperviousai/imp-daemon-staging/releases/download/v1.1.4/impervious_1.1.4_darwin_arm64.zip
+        run: cp ./daemonDownloads/impervious*_darwin_arm64.zip ./src/extraResources/daemon/impervious.zip
+      - name: Get macosx arm64 Browser
+        # run: wget -O ./src/extraResources/browser/Impervious.zip https://github.com/imperviousai/imp-browser-staging/releases/download/0.1.3-alpha/Impervious-macosx_arm64.zip
+        run: cp ./browserDownloads/Impervious-macosx_arm64.zip ./src/extraResources/browser/Impervious.zip
+      - name: Build and Sign (macosx-arm64)
+        run: yarn make:mac --arch=arm64
+        env:
+          AC_PASSWORD: ${{ secrets.AC_PASSWORD }}
+      - name: "Upload zip to Job"
+        uses: actions/upload-artifact@v3
+        with:
+          name: Impervious-macosx_arm64_zip
+          path: out/make/zip/darwin/arm64/*.zip
+      - name: "Upload dmg to Job"
+        uses: actions/upload-artifact@v3
+        with:
+          name: Impervious-macosx_arm64_dmg
+          path: out/make/*.dmg
+
+
+  macosx_amd64:
+    name: Building (macosx_amd64)
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Set Up Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+      - name: Yarn Install
+        run: yarn
+      - name: Import Keychain Certs
+        uses: apple-actions/import-codesign-certs@v1
+        with:
+          p12-file-base64: ${{ secrets.CERTIFICATES_P12 }}
+          p12-password: ${{ secrets.CERTIFICATES_P12_PASSWORD }}
+
+      - name: Download Daemon Assets
+        uses: robinraju/release-downloader@v1.6
+        with:
+          repository: "imperviousai/imp-daemon-staging"
+          latest: true
+          fileName: '*.zip'
+          out-file-path:  "daemonDownloads"
+          token:  ${{ secrets.DOWNLOADPAT }}
+      - name: Download Browser Assets
+        uses: robinraju/release-downloader@v1.6
+        with:
+          repository: "imperviousai/imp-browser-staging"
+          latest: true
+          fileName: '*.zip'
+          out-file-path:  "browserDownloads"
+          token:  ${{ secrets.DOWNLOADPAT }}
+
+
+      - name: Get macosx x64 Daemon
+        run: cp ./daemonDownloads/impervious*_darwin_amd64.zip ./src/extraResources/daemon/impervious.zip
+      - name: Get macosx x64 Browser
+        run: cp ./browserDownloads/Impervious-macosx_amd64.zip ./src/extraResources/browser/Impervious.zip
+      - name: Build and Sign (macosx-amd64)
+        run: yarn make:mac
+        env:
+          AC_PASSWORD: ${{ secrets.AC_PASSWORD }}
+      - name: "Upload zip to Job"
+        uses: actions/upload-artifact@v3
+        with:
+          name: Impervious-macosx_amd64_zip
+          path: out/make/zip/darwin/x64/*.zip
+      - name: "Upload dmg to Job"
+        uses: actions/upload-artifact@v3
+        with:
+          name: Impervious-macosx_amd64_dmg
+          path: out/make/*.dmg
+
+
+  linux_amd64:
+    name: Building (linux_amd64)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Set Up Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+      - name: Yarn Install
+        run: yarn
+      - name: "apt-get update"
+        run: sudo apt-get update
+      - name: Set up GPG
+        run: sudo apt install gnupg
+
+
+      - name: Download Daemon Assets
+        uses: robinraju/release-downloader@v1.6
+        with:
+          repository: "imperviousai/imp-daemon-staging"
+          latest: true
+          fileName: '*.zip'
+          out-file-path:  "daemonDownloads"
+          token:  ${{ secrets.DOWNLOADPAT }}
+
+      - name: Download Browser Assets
+        uses: robinraju/release-downloader@v1.6
+        with:
+          repository: "imperviousai/imp-browser-staging"
+          latest: true
+          fileName: '*.zip'
+          out-file-path:  "browserDownloads"
+          token:  ${{ secrets.DOWNLOADPAT }}
+
+      - name: Import GPG key
+        id: import_gpg
+        uses: crazy-max/ghaction-import-gpg@v5
+        with:
+          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
+          passphrase: ${{ secrets.GPG_PASSPHRASE }}
+
+
+
+      - name: Get linux x64 Daemon
+        run: cp ./daemonDownloads/impervious*_linux_amd64.zip ./src/extraResources/daemon/impervious.zip
+      - name: Get linux x64 Browser
+        run: cp ./browserDownloads/Impervious-linux_amd64.zip ./src/extraResources/browser/Impervious.zip
+      - name: Build (linux-x64)
+        run: yarn make:linux --arch=x64
+
+      - name: Sign with GPG
+        working-directory: out/make/zip/linux/x64
+        run: gpg --detach-sign Impervious-linux-x64*.zip
+
+      - name: Write GPG Pub Key
+        working-directory: out/make/zip/linux/x64
+        env:
+          GPG_PUBLIC_KEY: ${{ secrets.GPG_PUBLIC_KEY }}
+        run: echo $GPG_PUBLIC_KEY >> Impervious.gpg
+
+      # - name: Install aptly
+      #   run: sudo apt install aptly -y
+      # - name: Get aptly config
+      #   env:
+      #     APTLY_CONFIG: ${{ secrets.APTLY_CONFIG }}
+      #   run: echo $APTLY_CONFIG | base64 --decode > $HOME/.aptly.conf
+      # - name: Create aptly repo
+      #   working-directory: $HOME
+      #   run: aptly repo create -distribution=stable -component=main impervious-release
+      # - name: Add deb to repo
+      #   working-directory: $HOME
+      #   run: aptly repo add impervious-release out/make/deb/x64/
+      # - name: Snapshot DEB and repo
+      #   working-directory: $HOME
+      #   run: aptly snapshot create impervious-latest from repo impervious-release
+      # - name: Deploy to s3
+      #   working-directory: $HOME
+      #   env:
+      #     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      #     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      #   run: 'aptly publish snapshot impervious-latest s3:repo.impervious.live:'
+
+
+      - name: "Upload zip to Job"
+        uses: actions/upload-artifact@v3
+        with:
+          name: Impervious-linux_amd64_zip
+          path: out/make/zip/linux/x64/*.zip
+
+      - name: "Upload sig to Job"
+        uses: actions/upload-artifact@v3
+        with:
+          name: Impervious-linux_amd64_zip_sig
+          path: out/make/zip/linux/x64/*.sig
+
+      - name: "Upload public key to Job"
+        uses: actions/upload-artifact@v3
+        with:
+          name: Impervious_gpg
+          path: out/make/zip/linux/x64/*.gpg
+
+      - name: "Upload DEB to Job"
+        uses: actions/upload-artifact@v3
+        with:
+          name: Impervious-linux_amd64_deb
+          path: out/make/deb/x64/*.deb
+
+
+  win_amd64:
+    name: Building (win_amd64)
+    runs-on: self-hosted
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Set Up Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+      # - name: Set up windows specifics
+      #   run: "npm config set msvs_version 2015"
+      # - name: Set up more windows specifics
+      #   run: "npm install --global --production windows-build-tools@4.0.0"
+      - name: "Increase yarn timeout"
+        run: "yarn config set network-timeout 300000"
+      - name: Yarn Install
+        run: yarn
+
+
+      - name: Download Daemon Assets
+        uses: robinraju/release-downloader@v1.6
+        with:
+          repository: "imperviousai/imp-daemon-staging"
+          latest: true
+          fileName: '*.zip'
+          out-file-path:  "daemonDownloads"
+          token:  ${{ secrets.DOWNLOADPAT }}
+      - name: Download Browser Assets
+        uses: robinraju/release-downloader@v1.6
+        with:
+          repository: "imperviousai/imp-browser-staging"
+          latest: true
+          fileName: '*.zip'
+          out-file-path:  "browserDownloads"
+          token:  ${{ secrets.DOWNLOADPAT }}
+
+
+
+      - name: Get win x64 Daemon
+        run: cp ./daemonDownloads/impervious*_windows_amd64.zip ./src/extraResources/daemon/impervious.zip
+      - name: Get win x64 Browser
+        run: cp ./browserDownloads/Impervious-windows_amd64.zip ./src/extraResources/browser/Impervious.zip
+      - name: Build (win-x64)
+        run: yarn make:win --arch=x64
+      - name: "Upload exe artifacts to Job"
+        uses: actions/upload-artifact@v3
+        with:
+          name: Impervious-win32_amd64_exe
+          path: out\make\squirrel.windows\x64\*.exe
+      - name: "Upload nupkg artifacts to Job"
+        uses: actions/upload-artifact@v3
+        with:
+          name: Impervious-win32_amd64_nupkg
+          path: out\make\squirrel.windows\x64\*.nupkg
+      - name: "Upload RELEASES artifacts to Job"
+        uses: actions/upload-artifact@v3
+        with:
+          name: win32-RELEASES
+          path: out\make\squirrel.windows\x64\RELEASES
+
+
+  release_artifacts:
+    name: Preparing Release
+    needs: [macosx_arm64, macosx_amd64, linux_amd64, win_amd64]
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Download Artifacts"
+        uses: actions/download-artifact@v3
+        with:
+          path: "./downloads"
+      - name: Make Release dir
+        run: mkdir -p $GITHUB_WORKSPACE/releases
+
+      - name: "LS All Downloaded Artifacts"
+        working-directory: "./downloads"
+        run: "ls -la && for x in $(ls .); do file $x; done;"
+
+      - name: "Move All Artifacts (They are all dirs with zips in them)"
+        working-directory: "./downloads"
+        run: for x in $(ls .); do cd $x; cp * $GITHUB_WORKSPACE/releases/; cd ../; done;
+
+      - name: "LS Post Release Folder and SHA256"
+        run: "cd $GITHUB_WORKSPACE/releases && ls -la && for x in $(ls | grep -v 'exe'); do sha256sum $x >> $GITHUB_WORKSPACE/releases/SHA256-Checksums.txt; done;"
+      - name: SHA256 for windows (Pregenerated space in name messes up in command above)
+        run: cd $GITHUB_WORKSPACE/releases && sha256sum *.exe >> $GITHUB_WORKSPACE/releases/SHA256-Checksums.txt
+
+      - name: Release Artifacts
+        uses: marvinpinto/action-automatic-releases@latest
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: "v0.4.7"
+          title: "v0.4.7"
+          prerelease: true
+          files: |
+            **/releases/*.zip
+            **/releases/*.dmg
+            **/releases/*.exe
+            **/releases/*.nupkg
+            **/releases/RELEASES
+            **/releases/*.txt
+            **/releases/*.sig
+            **/releases/*.gpg
+            **/releases/*.deb

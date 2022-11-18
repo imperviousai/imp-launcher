@@ -52,11 +52,13 @@ module.exports = {
       name: "@electron-forge/maker-squirrel",
       config: {
         // https://js.electronforge.io/maker/squirrel/interfaces/makersquirrelconfig
-        setupExe: "Impervious Setup.exe",
-        iconUrl: path.join(packageAssetsPath, "icons", "win", "icon.ico"),
+        // setupExe: "Impervious Setup.exe",
+        // iconUrl: path.join(packageAssetsPath, "icons", "win", "icon.ico"),
+        iconUrl: "https://github.com/imperviousai/imp-browser/blob/master/brands/impervious/branding/firefox.ico",
         setupIcon: path.join(packageAssetsPath, "icons", "win", "icon.ico"),
         authors: "Impervious",
         loadingGif: path.join(packageAssetsPath, "icons", "png", "background500x700.png"),
+        signWithParams: "/fd sha256 /tr http://ts.ssl.com /td sha256 /sha1 d03d7db46cb3042a46eac48ececfb3d59f83e242"
       },
     },
     // You can only build the DMG target on macOS machines.
@@ -87,13 +89,19 @@ module.exports = {
       // No config choice
     },
 
-    // {
-    //   name: "@electron-forge/maker-deb",
-    //   config: {
-    //     // https://js.electronforge.io/maker/deb/interfaces/makerdebconfig
-    //     icon: path.join(packageAssetsPath, "icons", "png", "1024x1024.png"),
-    //   },
-    // },
+    {
+      name: "@electron-forge/maker-deb",
+      platforms: ["linux"],
+      config: {
+        // https://js.electronforge.io/maker/deb/interfaces/makerdebconfig
+        icon: path.join(packageAssetsPath, "icons", "png", "1024x1024.png"),
+        bin: "Impervious",
+        genericName: "Impervious Launcher",
+        productName: "Impervious Launcher",
+        homepage: "https://www.impervious.ai",
+        maintainer: "Impervious Technologies Inc",
+      },
+    },
   ],
   plugins: [
     [

@@ -18,10 +18,10 @@ export const changePortNix = () => {
     accessSync(configFile, constants.R_OK)
     const file = fs.readFileSync(configFile, 'utf8')
     let yamlConfig = YAML.parse(file)
-    yamlConfig.server.client_addr = "127.0.0.1:8888"
-    fs.writeFileSync(configFile, YAML.stringify(yamlConfig));
-
-
+    if (yamlConfig.server.client_addr === "127.0.0.1:8080") { // if old config is on 8080
+      yamlConfig.server.client_addr = "127.0.0.1:8888"
+      fs.writeFileSync(configFile, YAML.stringify(yamlConfig));
+    }
   } catch (err) {
     console.error(err);
   }
