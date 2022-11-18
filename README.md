@@ -41,6 +41,36 @@ If everything went well, clicking the `Close and Launch` button will fire up bot
 
 Launching and closing the browser will also start or stop the background daemon respectively.
 
+## **Ubuntu APT Installation Instructions**
+
+> Install Impervious via APT on Ubuntu 22.04
+
+1. Install the Impervious.gpg key into your APT keyring.
+
+```sh
+$ sudo mkdir -p /etc/apt/keyrings
+$ curl -fsSL https://repo.imp-api.net/Impervious.gpg | sudo gpg --dearmor -o /etc/apt/keyrings/Impervious.gpg
+```
+
+2. Add the repo information to a new apt list file
+
+```sh
+$ echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/Impervious.gpg] https://repo.imp-api.net stable main" | sudo tee /etc/apt/sources.list.d/impervious.list
+```
+
+3. Now you can apt update/install
+
+```sh
+$ sudo apt update
+$ sudo apt install impervious
+```
+
+4. The binary is located in the following location:
+
+```sh
+/usr/bin/impervious
+```
+
 ## **Factory Reset Instructions**
 
 > How to perform a "Factory Reset" on your Impervious Browser
